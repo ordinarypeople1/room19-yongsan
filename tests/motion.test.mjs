@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createAgent,setActivity,updateAgent,decoration} from '../motion.js';
+import {roomScene} from '../live-art.js';
+const run=(a,seconds,speed=1)=>{for(let i=0;i<seconds*60;i++)updateAgent(a,1/60,speed);};
+test('housework follows a continuous loop without teleporting or freezing',()=>{const a=createAgent(1);setActivity(a,'집안일');const locations=new Set();for(let i=0;i<60*60;i++){const {x,y}=a;updateAgent(a,1/60);assert(Math.hypot(a.x-x,a.y-y)<.23);locations.add(Math.round(a.x));}assert(locations.size>40);assert(a.cycles>59);});
+test('pause freezes position and activity timers, speed resumes smoothly',()=>{const a=createAgent(3);setActivity(a,'집안일');run(a,1);const before={...a};run(a,10,0);assert.equal(a.x,before.x);assert.equal(a.y,before.y);assert.equal(a.cycles,before.cycles);run(a,1);assert.notEqual(a.x,before.x);});
+test('commuting exits through the boundary and returns from the same location',()=>{const a=createAgent(2);setActivity(a,'출근');assert.equal(a.visible,true);run(a,25);assert(a.x>100);assert.equal(a.pose,'away');assert.equal(a.visible,false);const before=a.x;setActivity(a,'집안일');assert.equal(a.x,before);assert.equal(a.visible,true);run(a,4);assert(a.x<before);});
+test('bathroom privacy and sleep persist after arriving until activity changes',()=>{const a=createAgent(5);setActivity(a,'샤워 · 비공개');run(a,20);assert.equal(a.pose,'private');assert.equal(a.visible,false);run(a,20);assert.equal(a.pose,'private');setActivity(a,'수면');run(a,30);assert.equal(a.pose,'sleep');assert.equal(a.visible,true);run(a,20);assert.equal(a.pose,'sleep');});
+test('vacancy removes all tenant furniture and sprites; styles follow residents',()=>{const empty={id:102,tenant:null,fault:null};assert.equal(decoration(null).key,'empty-v2');const html=roomScene(empty);assert(html.includes('assets/empty-v2.png'));assert(!html.includes('data-actor='));const choices=new Set();for(let id=1;id<=10;id++)choices.add(decoration({id,quiet:true,tidy:80}).key);assert.equal(choices.size,3);});
