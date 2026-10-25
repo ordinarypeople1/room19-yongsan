@@ -3,3 +3,5 @@
 .npc{width:auto;aspect-ratio:1/3}.detail-art .npc{width:auto;aspect-ratio:1/3}.photo-portrait i{height:144px}.interior-plate{object-fit:cover;object-position:center 63%}.detail-art .interior-plate{object-fit:fill}
 
 .npc,.photo-portrait i{background-size:var(--atlas-size) 100%;background-position:var(--atlas-pos) 0}.npc,.detail-art .npc{aspect-ratio:var(--atlas-ratio);width:auto}.photo-portrait i{height:var(--portrait-height)}.detail-art{position:relative}
+
+.npc{clip-path:inset(0 0 3.2% 0)}.detail-art .room-art.private-room:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#9a9b82e8 0 24px,#b8b69cef 24px 47px);z-index:4}.private-room .privacy-door{z-index:5;right:42%;width:16%;border-radius:8px}.private-room .privacy-door small{font-size:7px}

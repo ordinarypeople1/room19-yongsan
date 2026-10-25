@@ -28,4 +28,22 @@ else if(p.energy<40){p.activity='휴식';p.energy=clamp(p.energy+1.2);}
 else p.activity=h>21?'독서':'집안일';}
 if(s.minute%120===0&&h>=18&&h<=22)socialEvent(s);}}
 export function serialize(s){return JSON.stringify(s,(k,v)=>k==='rng'?undefined:v);}
-export function restore(text){const s=JSON.parse(text);if(s.version!==VERSION||!Number.isInteger(s.day)||s.day<1||!Number.isInteger(s.minute)||s.minute<0||s.minute>=1440||!Number.isFinite(s.cash)||!Array.isArray(s.rooms)||s.rooms.length!==20||!Array.isArray(s.applications)||!Array.isArray(s.logs)||!Array.isArray(s.issues)||!s.upgrades||!Number.isInteger(s.nextId))throw Error('호환되지 않는 저장 파일입니다.');const ids=new Set();for(const r of s.rooms){if(!Number.isInteger(r.id)||r.id%100<1||r.id%100>4||Math.floor(r.id/100)<1||Math.floor(r.id/100)>5||ids.has(r.id)||!Number.isFinite(r.rent)||!Number.isFinite(r.deposit)||r.rent<30||r.rent>150||r.deposit<0||r.deposit>2000)throw Error('호실 정보가 올바르지 않습니다.');ids.add(r.id);if(r.tenant&&(!Number.isInteger(r.tenant.age)||r.tenant.age<20||!r.tenant.relations||typeof r.tenant.name!=='string'))throw Error('입주자 정보가 올바르지 않습니다.');}if(s.applications.some(p=>!Number.isInteger(p.age)||p.age<20||typeof p.name!=='string'))throw Error('지원자 정보가 올바르지 않습니다.');for(const key of Object.keys(upgradeInfo))if(!Number.isInteger(s.upgrades[key])||s.upgrades[key]<0||s.upgrades[key]>3)throw Error('시설 정보가 올바르지 않습니다.');s.rng=Math.random;return s;}
+export function restore(text){const s=JSON.parse(text);if(s.version!==VERSION||!Number.isInteger(s.day)||s.day<1||!Number.isInteger(s.minute)||s.minute<0||s.minute>=1440||!Number.isFinite(s.cash)||!Array.isArray(s.rooms)||s.rooms.length!==20||!Array.isArray(s.applications)||!Array.isArray(s.logs)||!Array.isArray(s.issues)||!s.upgrades||!Number.isInteger(s.nextId))throw Error('호환되지 않는 저장 파일입니다.');const ids=new Set();for(const r of s.rooms){if(!Number.isInteger(r.id)||r.id%100<1||r.id%100>4||Math.floor(r.id/100)<1||Math.floor(r.id/100)>5||ids.has(r.id)||!Number.isFinite(r.rent)||!Number.isFinite(r.deposit)||r.rent<30||r.rent>150||r.deposit<0||r.deposit>2000)throw Error('호실 정보가 올바르지 않습니다.');ids.add(r.id);if(r.tenant&&(!Number.isInteger(r.tenant.age)||r.tenant.age<20||!r.tenant.relations||typeof r.tenant.name!=='string'))throw Error('입주자 정보가 올바르지 않습니다.');}if(s.applications.some(p=>!Number.isInteger(p.age)||p.age<20||typeof p.name!=='string'))throw Error('지원자 정보가 올바르지 않습니다.');for(const key of Object.keys(upgradeInfo))if(!Number.isInteger(s.upgrades[key])||s.upgrades[key]<0||s.upgrades[key]>3)throw Error('시설 정보가 올바르지 않습니다.');validateSaveDetails(s);s.rng=Math.random;return s;}
+
+function validateSaveDetails(s){
+const finite=(v,min=-Infinity,max=Infinity)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
+const fail=()=>{throw Error('저장 파일의 상세 정보가 올바르지 않습니다.');};
+if(!finite(s.earned,0)||!finite(s.spent,0)||!finite(s.depositHeld,0)||s.applications.length>6||s.logs.length>100||s.issues.length>8||s.nextId<1)fail();
+const people=[...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications];
+for(const p of people){if(!Number.isSafeInteger(p.id)||p.id<1||typeof p.name!=='string'||p.name.length>30||!['남','여'].includes(p.gender)||typeof p.job!=='string'||p.job.length>50||typeof p.quiet!=='boolean'||!p.relations||Array.isArray(p.relations))fail();
+for(const k of ['energy','hunger','hygiene','connection','desire','happiness','social','tidy'])if(!finite(p[k],0,100))fail();
+for(const k of ['income','budget','deposit','start','end','lowDays'])if(!finite(p[k],0,10000))fail();
+if(p.start>=p.end||p.end>24||!Object.values(p.relations).every(v=>finite(v,0)))fail();
+if(p.partner!==null&&!Number.isSafeInteger(p.partner))fail();
+if(p.visitor!==null&&typeof p.visitor!=='string')fail();
+if(typeof p.activity!=='string'||p.activity.length>100)fail();}
+for(const p of s.applications)if(!Number.isInteger(p.applied)||p.applied<1||p.applied>s.day)fail();
+for(const r of s.rooms)if(r.fault&&(typeof r.fault.name!=='string'||!finite(r.fault.cost,0,1000)))fail();
+for(const l of s.logs)if(typeof l.text!=='string'||typeof l.type!=='string'||!Number.isInteger(l.day)||!finite(l.minute,0,1439))fail();
+for(const i of s.issues)if(!Number.isSafeInteger(i.id)||typeof i.text!=='string'||!Array.isArray(i.rooms)||!i.rooms.every(id=>s.rooms.some(r=>r.id===id)))fail();
+}
