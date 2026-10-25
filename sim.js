@@ -1,3 +1,4 @@
+import {elapsedGameMinutes} from './pace.js';
 export const VERSION=1;
 const surnames=['김','이','박','최','정','강','윤','임','한','오'];
 const names={남:['도현','지훈','준서','현우','시우','민재','선우','태윤'],여:['서연','지우','수빈','하은','서윤','민서','예진','소연']};
@@ -51,4 +52,5 @@ for(const l of s.logs)if(typeof l.text!=='string'||typeof l.type!=='string'||!Nu
 for(const i of s.issues)if(!Number.isSafeInteger(i.id)||typeof i.text!=='string'||!Array.isArray(i.rooms)||!i.rooms.every(id=>s.rooms.some(r=>r.id===id)))fail();
 }
 
-export function resumeIdle(s,now=Date.now()){s.mode=s.mode||'cozy';if(s.paused){s.lastSavedAt=now;return 0;}const last=s.lastSavedAt;const elapsed=Number.isFinite(last)&&last<=now?Math.min(7*1440,Math.floor((now-last)/6000)*10):0;if(elapsed>0)step(s,elapsed);s.lastSavedAt=now;return elapsed;}
+export function resumeIdle(s,now=Date.now()){s.mode=s.mode||'cozy';if(s.paused){s.lastSavedAt=now;return 0;}const last=s.lastSavedAt;const elapsed=Number.isFinite(last)&&last<=now?Math.min(7*1440,elapsedGameMinutes(now-last)):0;if(elapsed>0)step(s,elapsed);s.lastSavedAt=now;return elapsed;}
+

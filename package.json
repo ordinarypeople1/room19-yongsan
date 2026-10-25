@@ -1,1 +1,13 @@
-{"name":"room19-yongsan","version":"0.3.0","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test tests/sim.test.mjs tests/motion.test.mjs tests/cozy.test.mjs"},"engines":{"node":">=20.11"}}
+{
+  "name": "room19-yongsan",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/sim.test.mjs tests/motion.test.mjs tests/cozy.test.mjs tests/pace.test.mjs"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}
