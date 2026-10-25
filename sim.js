@@ -1,3 +1,4 @@
+import {activeInteraction,validInteraction} from './interactions.js';
 import {nextAppearance,migrateAppearances,matchesGender} from './cast.js';
 import {elapsedGameMinutes} from './pace.js';
 export const VERSION=1;
@@ -22,6 +23,7 @@ s.cash+=income;s.earned+=income;if(s.mode==='cozy'){s.cash=Math.max(s.cash,300);
 export function step(s,minutes=10){for(let i=0;i<minutes;i+=10){s.minute+=10;if(s.minute>=1440){s.minute-=1440;midnight(s);}const h=s.minute/60;for(const r of s.rooms){const p=r.tenant;if(!p)continue;p.energy=clamp(p.energy-.35);p.hunger=clamp(p.hunger+.65);p.hygiene=clamp(p.hygiene-.4);p.connection=clamp(p.connection-.2);p.desire=clamp(p.desire+.12);p.visitor=null;
 if(h<6.5||h>=24-(p.end>22?0:1)){p.activity='수면';p.outfit='home';p.energy=clamp(p.energy+2.5);}
 else if(h>=p.start&&h<p.end&&s.day%7!==0){p.activity='출근';p.outfit='street';}
+else if(activeInteraction(s,p)){continue;}
 else if(p.hygiene<50&&!r.fault){p.activity='샤워 · 비공개';p.hygiene=clamp(p.hygiene+18);}
 else if(p.activity==='샤워 · 비공개'||(h>=p.end&&h<p.end+1/6)){p.activity='속옷 갈아입기 · 비공개';}
 else if(p.hunger>60){p.activity='식사';p.hunger=clamp(p.hunger-22);}
@@ -40,7 +42,7 @@ const finite=(v,min=-Infinity,max=Infinity)=>typeof v==='number'&&Number.isFinit
 const fail=()=>{throw Error('저장 파일의 상세 정보가 올바르지 않습니다.');};
 if(!finite(s.earned,0)||!finite(s.spent,0)||!finite(s.depositHeld,0)||s.applications.length>6||s.logs.length>100||s.issues.length>8||s.nextId<1)fail();
 const people=[...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications];
-for(const p of people){if(p.visualId!==undefined&&!matchesGender(p.visualId,p.gender))fail();if(!Number.isSafeInteger(p.id)||p.id<1||typeof p.name!=='string'||p.name.length>30||!['남','여'].includes(p.gender)||typeof p.job!=='string'||p.job.length>50||typeof p.quiet!=='boolean'||!p.relations||Array.isArray(p.relations))fail();
+for(const p of people){if(!validInteraction(p.interaction))fail();if(p.visualId!==undefined&&!matchesGender(p.visualId,p.gender))fail();if(!Number.isSafeInteger(p.id)||p.id<1||typeof p.name!=='string'||p.name.length>30||!['남','여'].includes(p.gender)||typeof p.job!=='string'||p.job.length>50||typeof p.quiet!=='boolean'||!p.relations||Array.isArray(p.relations))fail();
 for(const k of ['energy','hunger','hygiene','connection','desire','happiness','social','tidy'])if(!finite(p[k],0,100))fail();
 for(const k of ['income','budget','deposit','start','end','lowDays'])if(!finite(p[k],0,10000))fail();
 if(p.start>=p.end||p.end>24||!Object.values(p.relations).every(v=>finite(v,0)))fail();
