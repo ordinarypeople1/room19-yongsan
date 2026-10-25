@@ -4,7 +4,7 @@
 
 ## 실행
 
-Node.js 20.11 이상에서 패키지 설치 없이 `npm start`를 실행하고 http://127.0.0.1:4173 을 엽니다. 권장 화면은 1440×900, 최소 너비는 1024px입니다. `npm test`로 테스트 19개를 실행합니다.
+Node.js 20.11 이상에서 패키지 설치 없이 `npm start`를 실행하고 http://127.0.0.1:4173 을 엽니다. 권장 화면은 1440×900이며, 좁은 데스크톱 앱 패널에서도 5×4 호실 그리드를 유지합니다. `npm test`로 테스트 19개를 실행합니다.
 
 ## 플레이
 
@@ -48,4 +48,5 @@ Node.js 20.11 이상에서 패키지 설치 없이 `npm start`를 실행하고 h
 추가 엔진이나 유료 API 없이 브라우저의 연속 프레임 렌더링을 사용합니다. 기존 0.1 코드와 이미지는 호환 이력용으로 남아 있지만 진입점은 `live-app.js`입니다. 현재 사용되는 이미지는 `characters.png`, `homewear-v2.png`, `empty-v2.png`, `minimal-v2.png`, `warm-v2.png`, `creative-v2.png`입니다.
 
 폰트는 [Pretendard 공식 배포](https://github.com/orioncactus/pretendard)의 v1.3.9 동적 서브셋 CDN을 사용합니다. 인터넷 연결이 없으면 시스템 한글 글꼴로 대체됩니다. 생성 이미지와 프롬프트 기록은 [assets/LIVE-ASSETS.md](assets/LIVE-ASSETS.md), 후속 계획은 [ROADMAP.md](ROADMAP.md)에 있습니다.
+
 
