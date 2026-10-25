@@ -16,3 +16,6 @@ dialog{width:min(1100px,94vw);background:#24282a;border-color:#656960;border-rad
 @media(min-width:1051px){header{flex-wrap:nowrap}.header-actions{width:auto}.speed{margin-left:0}}
 
 .floor-switch button.active:hover{background:#e5d8ba;color:#33352f}
+
+/* Each resident is one independent photo, with its own identity and silhouette. */
+.actor,.detail-art .actor{height:calc(65% * var(--person-scale,1));aspect-ratio:2/3}.actor-body>i.whole-person{background-size:100% 100%;background-position:center}.actor-shadow{left:27%;right:27%;bottom:4%}.portrait.individual-portrait i{background-image:var(--character-image);background-size:100% 100%;background-position:center;aspect-ratio:2/3;top:-8px;transform:scale(3.2);transform-origin:50% 0}

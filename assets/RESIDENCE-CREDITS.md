@@ -9,3 +9,6 @@ Use case: background-extraction. Edit target: supplied eight-person full body sp
 
 ## Motion
 Actors now translate as one intact cutout with subtle whole-body movement. This deliberately avoids synthetic joint rotations. True walking/sitting pose sequences require additional matched photographic/3D animation assets.
+
+## 0.4.1 individual cast
+Eight new fictional adult residents were generated independently with built-in ImageGen. Runtime actors and portraits now load assets/cast/man-01.png through man-04.png and woman-01.png through woman-04.png. Every file is 1024×1536 RGBA with verified transparent pixels. The prior group atlas is retained for historical reference but is no longer used by the live game. The complete per-person prompts are in cast/PROMPTS.md. Each resident receives a saved visualId; least-used selection distributes the eight appearances, with repeats possible when a gender pool exceeds four people.
