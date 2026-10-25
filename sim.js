@@ -1,3 +1,7 @@
+import { activeInteraction, validInteraction } from './interactions.js';
+import { nextAppearance, migrateAppearances, matchesGender } from './cast.js';
+import { elapsedGameMinutes } from './pace.js';
+
 export const VERSION = 2;
 
 const surnames = ['김', '이', '박', '최', '정', '강', '윤', '임', '한', '오'];
@@ -46,6 +50,7 @@ export function person(s) {
     id: s.nextId++,
     name: surnames[rand(10, s.rng)] + names[gender][rand(8, s.rng)],
     gender,
+    visualId: nextAppearance(s, gender),
     age: 20 + rand(20, s.rng),
     job: j[0], income: j[1], start: j[2], end: j[3],
     workdays: workdaysFor(j[4], rand(7, s.rng)),
@@ -284,6 +289,7 @@ function decide(s, r, h, workday) {
     next = '수면';
     p.energy = clamp(p.energy + 2.5);
   } else if (workday && h >= p.start && h < p.end) next = '출근';
+  else if (activeInteraction(s, p)) return; // 관리인 개입에 반응하는 동안은 하던 반응을 유지
   else if (p.hygiene < 50 && !r.fault) {
     next = '샤워 · 비공개';
     p.hygiene = clamp(p.hygiene + 18);
@@ -503,6 +509,7 @@ export function restore(text) {
   s.mode = s.mode || 'cozy';
   if (!['cozy', 'management'].includes(s.mode)) throw Error('지원하지 않는 생활 모드입니다.');
   validateSaveDetails(s);
+  migrateAppearances(s);
   s.rng = Math.random;
   return s;
 }
@@ -513,6 +520,8 @@ function validateSaveDetails(s) {
   if (!finite(s.earned, 0) || !finite(s.spent, 0) || !finite(s.depositHeld, 0) || s.applications.length > 6 || s.logs.length > 100 || s.issues.length > 8 || s.nextId < 1) fail();
   const people = [...s.rooms.map(r => r.tenant).filter(Boolean), ...s.applications];
   for (const p of people) {
+    if (!validInteraction(p.interaction)) fail();
+    if (p.visualId !== undefined && !matchesGender(p.visualId, p.gender)) fail();
     if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || !['남', '여'].includes(p.gender) || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();
     for (const k of ['energy', 'hunger', 'hygiene', 'connection', 'desire', 'happiness', 'social', 'tidy']) if (!finite(p[k], 0, 100)) fail();
     for (const k of ['income', 'budget', 'deposit', 'start', 'end', 'lowDays']) if (!finite(p[k], 0, 10000)) fail();
@@ -540,7 +549,7 @@ export function resumeIdle(s, now = Date.now()) {
   s.mode = s.mode || 'cozy';
   if (s.paused) { s.lastSavedAt = now; return 0; }
   const last = s.lastSavedAt;
-  const elapsed = Number.isFinite(last) && last <= now ? Math.min(7 * 1440, Math.floor((now - last) / 6000) * 10) : 0;
+  const elapsed = Number.isFinite(last) && last <= now ? Math.min(7 * 1440, elapsedGameMinutes(now - last)) : 0;
   if (elapsed > 0) step(s, elapsed);
   s.lastSavedAt = now;
   return elapsed;

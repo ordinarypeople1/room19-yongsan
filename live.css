@@ -7,38 +7,3 @@
 @media(max-width:1250px){header{gap:16px;padding:0 18px}.brand{min-width:145px}.brand b{font-size:25px}.clock{gap:10px}.clock b{font-size:24px}.clock span{font-size:12px}.speed button{padding:7px 9px}.header-actions{gap:6px}.header-actions button{font-size:14px;padding:9px 11px}main{padding-left:30px;padding-right:30px}}
 /* A narrow desktop app panel keeps the PC 5×4 stage without cropping columns. */
 @media(max-width:1023px){html,body{min-width:0}header{height:112px;flex-wrap:wrap;gap:7px 18px;padding:10px 18px;align-content:center}.brand{min-width:135px}.brand b{font-size:24px}.brand small{font-size:9px}.clock{margin-left:auto}.clock b{font-size:23px}.clock span{font-size:11px}.speed{margin-left:auto}.speed button{padding:6px 9px;font-size:13px}.header-actions{width:100%;justify-content:flex-end;gap:7px}.header-actions button{font-size:13px;padding:6px 12px}main{height:calc(100dvh - 154px);padding:12px 23px 0;min-height:340px}.floor-number{left:-19px;font-size:10px}.building{gap:5px;padding:4px 5px 5px}.floor{gap:5px}.room-number{font-size:11px;padding:3px 5px;left:4px;top:4px}.roof{height:18px;min-height:18px;font-size:8px;padding:0 9px}.roof small{font-size:8px}.ground{font-size:9px;height:18px;min-height:18px}footer{height:42px;padding:0 15px;gap:10px}footer>span:first-of-type{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}footer #save-status{display:none}footer #next{margin-left:auto}footer button{font-size:12px;padding:5px 9px}aside{width:min(480px,100vw);top:112px;bottom:42px}.drawer-backdrop{inset:112px 0 42px}.detail-art{height:300px;margin:0 18px}.detail-head{padding:17px 18px}.detail-head h2{font-size:22px}.detail-body{padding:20px;gap:20px}.lease{padding-left:20px}.meter{font-size:14px;gap:9px}.meter>span{width:58px}.person-card h3{font-size:18px}.person-card small,.person-card p{font-size:14px}.furniture-hotspots button{font-size:12px;padding:7px}}
-
-/* ── 0.4 장면 보정: 접지 그림자, 앉기 자세, 시간대 조명, 공실 소품 ── */
-.plate-wrap{position:absolute;inset:0}
-.plate-wrap.mirrored{transform:scaleX(-1)}
-.actor-shadow{left:4%;right:4%;bottom:1.5%;height:7%;background:radial-gradient(ellipse at center,#141a12b3 0%,#141a1259 40%,#141a1200 72%);filter:none;transform:translateY(30%)}
-.walking .actor-shadow{animation:shadow-step .7s infinite ease-in-out}
-.pose-sleep .actor-shadow{display:none}
-@keyframes shadow-step{50%{transform:translateY(30%) scaleX(.9);opacity:.8}}
-/* 정면 앉기: 허벅지는 원근으로 가려지고 상체가 무릎 높이까지 내려온다. 발은 바닥에 붙어 있다. */
-.pose-sit .actor-body{transform:scaleX(var(--facing,1))}
-.pose-sit .body-upper{transform:translateY(22%);animation:sit-breathe 4s infinite ease-in-out!important}
-.pose-sit .leg-left,.pose-sit .leg-right{transform:none;animation:none!important}
-.pose-sit .leg-left{clip-path:polygon(0 72%,52% 72%,52% 96.5%,0 96.5%)}
-.pose-sit .leg-right{clip-path:polygon(50% 72%,100% 72%,100% 96.5%,50% 96.5%)}
-@keyframes sit-breathe{0%,100%{transform:translateY(22%)}50%{transform:translateY(21.7%)}}
-/* 시간대 조명: 배경과 인물에 같은 색을 곱해 한 장면으로 묶는다 */
-.light-tint{position:absolute;inset:0;z-index:180;pointer-events:none;background:var(--tint,#fff);mix-blend-mode:multiply;transition:background 1.5s linear}
-.lamp-glow{position:absolute;inset:0;z-index:181;pointer-events:none;mix-blend-mode:screen;opacity:var(--lamp,0);transition:opacity 1.5s linear;background:radial-gradient(ellipse 34% 42% at 47% 42%,#ffcf8a8c,#ffcf8a00 70%),radial-gradient(ellipse 30% 30% at 76% 28%,#ffe2b04d,#ffe2b000 70%)}
-.vacant .lamp-glow,.room-stage:has([data-actor=resident].pose-away) .lamp-glow{opacity:0}
-.room-stage:has([data-actor=resident].pose-sleep) .lamp-glow{opacity:calc(var(--lamp,0)*.12)}
-.room-stage:has([data-actor=resident].pose-sleep) .light-tint{background:var(--tint-sleep,var(--tint,#fff))}
-.vacant .light-tint{background:var(--tint-vacant,var(--tint,#fff))}
-.night .room-plate{filter:none}
-.night .vacant .room-plate{filter:saturate(.55) brightness(.95)}
-/* 공실 소품 */
-.prop{position:absolute;display:block;pointer-events:none}
-.prop-box{left:76%;top:79%;width:8%;height:9%;border-radius:2px;background:linear-gradient(180deg,#c9a272,#a98157);box-shadow:0 3px 4px #2a20163d}
-.prop-box:after{content:'';position:absolute;left:44%;top:0;width:12%;height:100%;background:#e7d7b6b3}
-.prop-notice{left:60%;top:31%;width:4.5%;height:9%;background:repeating-linear-gradient(180deg,#f4efe2 0 18%,#c9c3b2 18% 22%);border-radius:1px;box-shadow:1px 2px 3px #2a201626}
-.prop-flyer{left:84%;top:90%;width:5%;height:3%;background:#e9e4d6;transform:rotate(-8deg);box-shadow:0 1px 2px #2a201630}
-.prop-blind{left:21%;top:0;width:17.5%;height:var(--blind,14%);background:repeating-linear-gradient(180deg,#ece8de 0 3px,#d5cfc0 3px 5px);box-shadow:0 2px 3px #2a201629}
-/* 수면: 침대 위에 눕고 이불은 침대 매트리스 위치에 덮는다 */
-.sleep-cover{left:14%;bottom:37%;width:19%;height:15%;border-radius:40% 22% 10px 14px/55% 40% 10px 14px;transform:skewX(-5deg);background:linear-gradient(170deg,#e9e2cfee,#cfc4abee);box-shadow:0 2px 4px #2a201630;z-index:150}
-.night .building{background:#525a50}
-.lamp-glow{background:radial-gradient(ellipse 55% 60% at 45% 40%,#ffcf8a52,#ffcf8a00 75%)}
