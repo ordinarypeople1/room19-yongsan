@@ -5,9 +5,11 @@ export const ACTIONS = [
   {id:'light',label:'조명 낮추기',icon:'care',activity:'조명 확인'},
 ];
 export const clock = s => s.day*1440+s.minute;
+// 방 밖에 나가 있는 활동. sim.js의 AWAY_ACTIVITIES와 같다(순환 import를 피해 따로 둔다).
+const AWAY=['출근','연인 집에 감','외출'];
 export function available(s,p){
   if(!p)return '입주자가 없습니다.';
-  if(p.activity==='출근')return '외출 중입니다.';
+  if(AWAY.includes(p.activity))return '외출 중입니다.';
   if(p.activity==='수면'||p.activity.includes('비공개'))return '지금은 개인 시간입니다.';
   const wait=(p.interaction?.nextAt||0)-clock(s);
   return wait>0?`게임 시간 ${Math.ceil(wait)}분 뒤 다시 가능`:null;
@@ -34,13 +36,13 @@ export function intervene(s,roomId,actionId){
   return null;
 }
 export function bubble(s,p){
-  if(!p||p.activity==='출근'||p.activity==='수면'||p.activity.includes('비공개'))return null;
+  if(!p||AWAY.includes(p.activity)||p.activity==='수면'||p.activity.includes('비공개'))return null;
   const event=activeInteraction(s,p);
   if(event)return {kind:'speech',text:event.text};
   if(p.energy<40)return {kind:'thought',text:'잠깐 쉬고 싶다…'};
   if(p.hunger>55)return {kind:'thought',text:'뭘 먹을까?'};
   if(p.connection<35)return {kind:'thought',text:'누군가와 얘기하고 싶네.'};
-  const thoughts={'독서':'한 장만 더 읽자.','음악 감상':'이 곡은 다시 듣고 싶네.','차 마시기':'따뜻한 차 한 잔.','청소':'조금만 정리할까.','빨래':'빨래가 잘 말랐으면.','휴대폰':'답장이 왔을까?','휴식':'오늘은 천천히.','스트레칭':'어깨가 좀 뻐근하네.'};
+  const thoughts={'독서':'한 장만 더 읽자.','음악 감상':'이 곡은 다시 듣고 싶네.','차 마시기':'따뜻한 차 한 잔.','청소':'조금만 정리할까.','빨래':'빨래가 잘 말랐으면.','휴대폰':'답장이 왔을까?','휴식':'오늘은 천천히.','스트레칭':'어깨가 좀 뻐근하네.','친구 방문':'와줘서 고마워.','연인 방문':'오늘 와줘서 좋다.'};
   return {kind:'thought',text:thoughts[p.activity]||'오늘은 무슨 일이 생길까?'};
 }
 export function validInteraction(v){

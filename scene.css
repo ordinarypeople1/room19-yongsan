@@ -1,0 +1,56 @@
+/* ROOM19 0.6 장면 보정: 시간대 조명, 실내등, 접지 그림자, 공실 소품.
+   residence.css 뒤에 불러온다. 좌표는 1.5 비율로 꽉 채운 방 사진 기준. */
+
+.plate-wrap { position: absolute; inset: 0; }
+.plate-wrap.mirrored { transform: scaleX(-1); }
+
+/* 접지 그림자: 발밑에 붙는 부드러운 타원 */
+.actor-shadow {
+  left: 22%; right: 22%; bottom: 1%; height: 6%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #141a12b8 0%, #141a1259 42%, #141a1200 72%);
+  filter: none;
+}
+.walking .actor-shadow { animation: shadow-step 1.3s ease-in-out infinite; }
+@keyframes shadow-step { 50% { transform: scaleX(.88); opacity: .8; } }
+
+/* 시간대 조명: 방 사진과 인물에 같은 색을 곱해 한 장면으로 묶는다 */
+.light-tint {
+  position: absolute; inset: 0; z-index: 180; pointer-events: none;
+  background: var(--tint, #fff); mix-blend-mode: multiply;
+  transition: background 1.5s linear;
+}
+.lamp-glow {
+  position: absolute; inset: 0; z-index: 181; pointer-events: none;
+  mix-blend-mode: screen; opacity: var(--lamp, 0); transition: opacity 1.5s linear;
+  background: radial-gradient(ellipse 55% 60% at 42% 42%, #ffcf8a5c, #ffcf8a00 75%);
+}
+.vacant .lamp-glow,
+.room-stage:has([data-actor=resident].pose-away) .lamp-glow { opacity: 0; }
+.room-stage:has([data-actor=resident].pose-sleep) .lamp-glow { opacity: calc(var(--lamp, 0) * .12); }
+.room-stage:has([data-actor=resident].pose-sleep) .light-tint { background: var(--tint-sleep, var(--tint, #fff)); }
+.vacant .light-tint { background: var(--tint-vacant, var(--tint, #fff)); }
+/* 기존 밤 필터는 조명 레이어가 대신한다 */
+.night .room-plate { filter: none; }
+.night .vacant .room-plate { filter: saturate(.55) brightness(.85); }
+/* 말풍선과 개입 효과는 조명보다 위에 둔다 */
+.resident-bubble { z-index: 230; }
+
+/* 공실 소품 */
+.prop { position: absolute; display: block; pointer-events: none; }
+.prop-box {
+  left: 71%; top: 79%; width: 6.5%; height: 8%; border-radius: 2px;
+  background: linear-gradient(180deg, #c9a272, #a98157); box-shadow: 0 3px 4px #2a20163d;
+}
+.prop-box:after { content: ''; position: absolute; left: 44%; top: 0; width: 12%; height: 100%; background: #e7d7b6b3; }
+.prop-notice {
+  left: 9%; top: 28%; width: 4%; height: 9%; border-radius: 1px;
+  background: repeating-linear-gradient(180deg, #f4efe2 0 18%, #c9c3b2 18% 22%);
+  box-shadow: 1px 2px 3px #2a201626;
+}
+.prop-flyer { left: 83%; top: 89%; width: 4.5%; height: 2.6%; background: #e9e4d6; transform: rotate(-8deg); box-shadow: 0 1px 2px #2a201630; }
+.prop-blind {
+  left: 21%; top: 19%; width: 23%; height: var(--blind, 12%);
+  background: repeating-linear-gradient(180deg, #ece8de 0 3px, #d5cfc0 3px 5px);
+  box-shadow: 0 2px 3px #2a201629;
+}
