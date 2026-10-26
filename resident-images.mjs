@@ -1,0 +1,12 @@
+export const IMAGE_MODEL='qwen/qwen-image-2.1-turbo';
+export const PORTRAIT_ORIGIN='https://ordinarypeople1.github.io/room19-yongsan/assets/cast/';
+export function validPhotoRequest(p){return !!p&&typeof p.prompt==='string'&&p.prompt.trim().length>0&&p.prompt.length<=600&&/^woman-0[1-8]$/.test(p.portrait)&&Number.isInteger(p.age)&&p.age>=20&&p.age<=41;}
+export async function generateResidentPhoto(p,{apiKey,fetchImpl=fetch}={}){
+  if(!validPhotoRequest(p))throw Error('Invalid photo request');
+  const response=await fetchImpl('https://openrouter.ai/api/v1/images',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json','HTTP-Referer':'https://ordinarypeople1.github.io/room19-yongsan/','X-Title':'ROOM19 resident photos'},body:JSON.stringify({model:IMAGE_MODEL,n:1,resolution:'1K',aspect_ratio:'3:4',prompt:`Create one natural cinematic photograph of the SAME fictional adult Korean woman shown in the reference portrait. She is ${p.age} years old. Preserve her facial structure, eyes, hairstyle, skin tone and apparent adult age. Warm, intimate everyday-life atmosphere in Yongsan, Seoul. Keep the subject fully clothed. No nudity, sexual activity, minors, violence, text or watermark. The requested scene (apply only scene, clothes, pose and lighting; keep the reference identity): ${p.prompt.trim()}`,input_references:[{type:'image_url',image_url:{url:PORTRAIT_ORIGIN+p.portrait+'.png'}}]}),signal:AbortSignal.timeout(150000)});
+  if(!response.ok)throw Error('Image generation unavailable');
+  const data=await response.json(),image=data.data?.[0];
+  if(!image||typeof image.b64_json!=='string'||image.b64_json.length>12000000||!/^[A-Za-z0-9+/]+={0,2}$/.test(image.b64_json))throw Error('Invalid image response');
+  const mediaType=image.media_type||'image/png';if(!['image/png','image/jpeg','image/webp'].includes(mediaType))throw Error('Unsupported image type');
+  return {image:'data:'+mediaType+';base64,'+image.b64_json,model:IMAGE_MODEL};
+}

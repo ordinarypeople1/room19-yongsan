@@ -80,3 +80,9 @@ npm test
 기존 `live-app.js`와 관련 아트·모션 파일은 이전 구현의 참고용으로 남아 있습니다. 현재 진입점은 `horizon-app.js`입니다.
 
 모든 입주자는 가상의 성인입니다. 이미지 출처와 생성 기록은 `assets/LIVE-ASSETS.md`, `assets/RESIDENCE-CREDITS.md`, `assets/cast/PROMPTS.md`를 참고하세요. 도시 배경은 내장 ImageGen으로 만든 실사 용산 블루아워 이미지입니다. 생성 기록은 `assets/ROMANTIC-ART.md`에 있습니다. 폰트는 Pretendard 공식 CDN을 사용하며 오프라인에서는 시스템 폰트로 대체됩니다.
+
+## 입주자 사진첩
+
+방의 **사진 보기**에서 장면을 입력하면 `qwen/qwen-image-2.1-turbo`가 기존 입주자 프로필을 참조해 사진 1장을 생성합니다. 프로필과 생성 사진은 클릭하면 확대됩니다. 생성 사진은 게임 저장과 별도로 이 브라우저의 IndexedDB에 입주자별 최근 6장까지 보관되며, 저장 파일 내보내기에는 포함되지 않습니다.
+
+OpenRouter Image API `/api/v1/images`는 서버의 `/api/photo`를 통해서만 호출합니다. 참조 이미지는 서버에서 허용한 기존 여성 캐스트 파일로 제한하고, 키는 브라우저에 전달하지 않습니다. 향후 게임 이미지 생성/편집 모델은 `AGENTS.md` 지침에 따라 Qwen Image 2.1 Turbo를 사용합니다.

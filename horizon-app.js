@@ -1,3 +1,4 @@
+import {mountPhotos,showPhoto,setPhotoTab} from './photos.js';
 import {createGame,step,approve,reject,repair,upgrade,upgradeInfo,mediate,serialize,restore,resumeIdle} from './sim.js';
 import {CAST,visualIndex} from './cast.js';
 import {decoration} from './motion.js';
@@ -47,12 +48,15 @@ function openRoom(id){hideTooltip();if($('#room-dialog').open)closeRoom();select
   if(p)mountProfile(p);$('#room-dialog').showModal();updateRoom();
 }
 function mountProfile(p){const traits=personality(p);
-  $('.room-visual').insertAdjacentHTML('afterbegin',`<section class="resident-profile" aria-label="입주자 프로필"><div class="profile-photo" role="img" aria-label="${esc(p.name)} 프로필 사진">${face(p)}</div><div class="profile-copy"><span class="eyebrow">YOUR NEIGHBOR</span><h3>${esc(p.name)}</h3><p>${p.age}세 · 여성 · ${esc(p.job)}</p><div class="profile-traits"><span>${esc(traits.sociability)}</span><span>${p.quiet?'차분한 성격':'다정한 성격'}</span></div><p class="profile-hobby">좋아하는 것 · ${esc(traits.hobby)}</p><p class="profile-value">${esc(traits.value)}</p></div></section>`);
-  $('.story-panel').insertAdjacentHTML('afterbegin','<nav class="room-tabs" aria-label="입주자 기록 보기"><button data-room-tab="activity">행동 기록</button><button data-room-tab="conversation">대화와 기억</button></nav>');
+  $('.room-visual').insertAdjacentHTML('afterbegin',`<section class="resident-profile" aria-label="입주자 프로필"><button type="button" class="profile-photo" id="expand-profile" aria-label="${esc(p.name)} 프로필 사진 확대">${face(p)}<span class="photo-expand-hint">사진 확대 ↗</span></button><div class="profile-copy"><span class="eyebrow">YOUR NEIGHBOR</span><h3>${esc(p.name)}</h3><p>${p.age}세 · 여성 · ${esc(p.job)}</p><div class="profile-traits"><span>${esc(traits.sociability)}</span><span>${p.quiet?'차분한 성격':'다정한 성격'}</span></div><p class="profile-hobby">좋아하는 것 · ${esc(traits.hobby)}</p><p class="profile-value">${esc(traits.value)}</p></div></section>`);
+  $('.story-panel').insertAdjacentHTML('afterbegin','<nav class="room-tabs" aria-label="입주자 기록 보기"><button data-room-tab="activity">행동 기록</button><button data-room-tab="conversation">대화와 기억</button><button data-room-tab="photos">사진 보기</button></nav>');
   $('#story-feed').insertAdjacentHTML('afterend','<div id="activity-feed" class="activity-feed" aria-label="행동 기록"><div class="diary-toolbar"><label><input type="checkbox" id="private-only"> 19+ · 사적인 기록만</label><span>행동이 바뀔 때 시각을 기록</span></div><div id="diary-entries"></div></div>');
+  const portrait=CAST[visualIndex(p)].file;$('#expand-profile').addEventListener('click',()=>showPhoto('assets/cast/'+portrait+'.png',p.name+' · 프로필 사진'));
+  mountPhotos(p,portrait,async body=>{if(!api.configured)await checkConnection();if(!api.configured)throw Error('AI 연결을 확인한 뒤 다시 시도해주세요.');return request('/api/photo',body);});
 }
 function updateDiary(p){
-  $('#story-feed').hidden=roomTab!=='conversation';$('#activity-feed').hidden=roomTab!=='activity';$('.story-heading h3').textContent=roomTab==='activity'?'이 방에서 흐르는 하루':'우리 사이의 작은 이야기';
+  setPhotoTab(roomTab==='photos');$('.composer').hidden=roomTab==='photos';
+  $('#story-feed').hidden=roomTab!=='conversation';$('#activity-feed').hidden=roomTab!=='activity';$('.story-heading h3').textContent=roomTab==='activity'?'이 방에서 흐르는 하루':roomTab==='photos'?'사진 속의 하루':'우리 사이의 작은 이야기';
   document.querySelectorAll('[data-room-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.roomTab===roomTab);b.setAttribute('aria-pressed',String(b.dataset.roomTab===roomTab));});
   const entries=(p.activityLog||[]).filter(e=>!privateOnly||e.kind!=='life').slice().reverse(),shown=entries.slice(0,diaryLimit),signature=JSON.stringify([shown,diaryLimit,privateOnly]);
   if(signature===diarySignature)return;diarySignature=signature;
@@ -77,7 +81,7 @@ function updateRoom(){const r=s.rooms.find(r=>r.id===selected),p=r.tenant;
 }
 function closeRoom(){if(!selected)return;const id=selected;selected=null;selectedPerson=null;$('#room-dialog').close();hideTooltip();save();render();$(`[data-room="${id}"]`)?.focus();}
 async function refreshApiSession(){if(!api.requiresSession)return;const response=await fetch(apiBase+'/session',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:controller?.signal});if(!response.ok)throw Error('AI 연결을 잠시 뒤 다시 시도해주세요.');const value=await response.json();apiToken=value.token;apiTokenExpires=value.expiresAt;}
-async function request(path,body,retry=true){if(api.requiresSession&&(!apiToken||Date.now()>apiTokenExpires-5000))await refreshApiSession();const response=await fetch(apiBase+'/'+path.split('/').at(-1),{method:'POST',headers:{'Content-Type':'application/json',...(apiToken?{Authorization:'Bearer '+apiToken}:{})},body:JSON.stringify(body),signal:controller?.signal});if(response.status===401&&api.requiresSession&&retry){await refreshApiSession();return request(path,body,false);}if(!response.ok)throw Error(response.status===429?'대화 요청이 많아요. 잠시 뒤 다시 이야기해주세요.':'AI 답변을 받지 못했어요. 연결 상태를 확인하고 다시 보내주세요.');return response.json();}
+async function request(path,body,retry=true){if(api.requiresSession&&(!apiToken||Date.now()>apiTokenExpires-5000))await refreshApiSession();const response=await fetch(apiBase+'/'+path.split('/').at(-1),{method:'POST',headers:{'Content-Type':'application/json',...(apiToken?{Authorization:'Bearer '+apiToken}:{})},body:JSON.stringify(body),signal:controller?.signal});if(response.status===401&&api.requiresSession&&retry){await refreshApiSession();return request(path,body,false);}if(!response.ok)throw Error(response.status===429?'대화 요청이 많아요. 잠시 뒤 다시 이야기해주세요.':path.endsWith('/photo')?'사진을 생성하지 못했어요. 잠시 뒤 다시 시도해주세요.':'AI 답변을 받지 못했어요. 연결 상태를 확인하고 다시 보내주세요.');return response.json();}
 async function submitAction(actionId=null){if(!selected||busy!==null)return;const state=s,version=epoch,r=s.rooms.find(r=>r.id===selected),p=r.tenant;if(!p)return;
   const input=actionId?LIFE_ACTIONS.find(a=>a.id===actionId)?.input:$('#command').value.trim();if(!input){$('#command').focus();return;}
   const intent=actionId||'talk',reason=canAct(s,p,intent);if(reason){toast(reason);return;}if(input.length>500){toast('500자 이내로 적어주세요.');return;}
