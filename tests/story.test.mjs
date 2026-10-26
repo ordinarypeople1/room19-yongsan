@@ -6,7 +6,7 @@ const setup=()=>{const s=createGame(()=>.2),r=s.rooms[0],p=r.tenant;s.day=7;s.mi
 test('interaction changes canonical state, holds activity, remembers and persists',()=>{
   const {s,r,p}=setup();const result=act(s,r.id,'talk','안녕하세요');
   assert.equal(result.event.accepted,true);assert.equal(p.playerBond,4);assert.equal(p.activity,'이웃과 대화');
-  assert(act(s,r.id,'talk','안녕하세요').error);assert.equal(p.story.length,1);
+  const connection=p.connection,logCount=p.activityLog.length;assert(act(s,r.id,'talk','어떤 책 좋아하세요?').event);assert.equal(p.story.length,2);assert.equal(p.playerBond,4);assert.equal(p.connection,connection);assert.equal(p.activityLog.length,logCount);
   step(s,10);assert.equal(p.activity,'이웃과 대화');step(s,10);assert.notEqual(p.activity,'이웃과 대화');
   assert.match(act(s,r.id,'talk','안녕하세요').event.reply,/기억나요/);
   const loaded=restore(serialize(s));assert.deepEqual(loaded.rooms[0].tenant.story,p.story);assert.deepEqual(loaded.rooms[0].tenant.memories,p.memories);

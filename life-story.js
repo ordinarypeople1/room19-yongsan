@@ -28,7 +28,7 @@ export function inferIntent(input) {
 export function canAct(s,p,intent) {
   if(!p)return '아직 입주자가 없는 방이에요.';
   if(intent==='unknown')return '아직 이해하지 못한 행동이에요. 아래 행동 버튼을 이용하거나, 한 가지 행동으로 다시 적어주세요.';
-  if((p.storyNextAt||0)>clock(s))return `조금 전의 만남이 이어지고 있어요. 게임 시간 ${p.storyNextAt-clock(s)}분 후 다시 이야기해요.`;
+  if(intent!=='talk'&&(p.storyNextAt||0)>clock(s))return `조금 전의 만남이 이어지고 있어요. 게임 시간 ${p.storyNextAt-clock(s)}분 후 다시 행동할 수 있어요.`;
   if(intent==='message')return null;
   if(away(p))return '지금은 외출 중이에요. 메시지를 남겨보세요.';
   if(privateTime(p))return '지금은 혼자만의 시간이에요. 메시지를 남겨보세요.';
@@ -40,6 +40,7 @@ export function act(s,roomId,intent,input) {
   const error=canAct(s,p,intent);if(error)return {error};
   if(typeof input!=='string'||!input.trim()||input.length>500)return {error:'1–500자로 행동을 적어주세요.'};
   p.playerBond??=0;p.memories??=[];p.story??=[];
+  const followup=intent==='talk'&&p.lastTalkRewardAt!==undefined&&clock(s)-p.lastTalkRewardAt<20;
   const previous=p.memories.at(-1),unavailable=away(p)||privateTime(p);
   let accepted=true,summary='',reply='',effect='',activity=null,bond=0;
   if(intent==='message') {
@@ -52,9 +53,9 @@ export function act(s,roomId,intent,input) {
   } else if(intent==='help'&&p.quiet&&p.playerBond<6) {
     accepted=false;summary='정리를 돕겠다는 제안을 정중하게 사양했다.';reply='마음은 고마운데, 제 물건은 제가 정리하고 싶어요.';effect='개인적인 공간을 존중했어요';
   } else if(intent==='talk') {
-    summary='잠시 하던 일을 멈추고 오늘 하루에 대해 이야기를 나눴다.';
+    summary=followup?'당신과 이야기를 이어 나갔다.':'잠시 하던 일을 멈추고 당신과 이야기를 나눴다.';
     reply=previous?`지난번 ${previous.label}, 기억나요. 다시 보니 반갑네요.`:p.quiet?'오늘은 조용히 보내고 있었어요. 당신은요?':'마침 누군가와 이야기하고 싶었어요. 오늘 어땠어요?';
-    bond=4;activity='이웃과 대화';p.connection=cap(p.connection+6);effect='친밀감 +4 · 교류 +6';
+    bond=followup?0:4;activity='이웃과 대화';if(!followup){p.connection=cap(p.connection+6);p.lastTalkRewardAt=clock(s);}effect=followup?'대화를 이어갔어요':'친밀감 +4 · 교류 +6';
   } else if(intent==='meal') {
     summary='식탁에 자리를 내어주고 함께 식사를 시작했다.';reply='좋아요. 같이 먹으면 더 맛있겠네요.';
     bond=6;activity='함께 식사';p.hunger=cap(p.hunger-25);p.connection=cap(p.connection+8);effect='친밀감 +6 · 허기 −25';
@@ -70,7 +71,7 @@ export function act(s,roomId,intent,input) {
   const label={talk:'나눴던 이야기',meal:'함께한 식사',gift:'챙겨준 도시락',help:'함께한 방 정리',message:'남겨준 메시지'}[intent];
   const event={id:s.nextId++,day:s.day,minute:s.minute,intent,input:input.trim(),summary,reply,effect,accepted,pending:intent==='message'&&unavailable,source:'local'};
   p.story.push(event);p.story=p.story.slice(-24);
-  if(accepted&&!event.pending){p.memories.push({day:s.day,label});p.memories=p.memories.slice(-8);}
+  if(accepted&&!event.pending&&!followup){p.memories.push({day:s.day,label});p.memories=p.memories.slice(-8);}
   s.logs.unshift({day:s.day,minute:s.minute,text:`${r.id}호 ${p.name} · ${summary}`,type:'social'});s.logs=s.logs.slice(0,100);
   recordActivities(s);
   return {event};
@@ -98,6 +99,7 @@ export function validStory(p) {
   if(p.storyUntil!==undefined&&!num(p.storyUntil))return false;
   if(p.storyNextAt!==undefined&&!num(p.storyNextAt))return false;
   if(p.lastSeenStory!==undefined&&!num(p.lastSeenStory))return false;
+  if(p.lastTalkRewardAt!==undefined&&!num(p.lastTalkRewardAt))return false;
   if(p.memories!==undefined&&(!Array.isArray(p.memories)||p.memories.length>8||!p.memories.every(m=>m&&num(m.day)&&typeof m.label==='string'&&m.label.length<=80)))return false;
   return p.story===undefined||(Array.isArray(p.story)&&p.story.length<=24&&p.story.every(e=>e&&num(e.id)&&num(e.day)&&num(e.minute,1439)&&INTENTS.includes(e.intent)&&typeof e.accepted==='boolean'&&typeof e.pending==='boolean'&&['local','openrouter'].includes(e.source)&&['input','summary','reply','effect'].every(k=>typeof e[k]==='string'&&e[k].length<=600)));
 }
