@@ -117,7 +117,7 @@ test('version 1 saves are migrated instead of rejected', () => {
     } else assert.equal(r.lease, null);
   }
   step(loaded, 1440);
-  assert.throws(() => restore(JSON.stringify({ ...raw, version: 3 })));
+  assert.throws(() => restore(JSON.stringify({ ...raw, version: VERSION+1 })));
 });
 
 test('months of idle life keep the building consistent and keep residents turning over', () => {

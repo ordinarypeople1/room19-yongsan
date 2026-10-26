@@ -1,7 +1,7 @@
 import {decoration} from './motion.js';
-import {CAST,visualIndex} from './cast.js';
+import {CAST,visualIndex,candidates} from './cast.js';
 export const spriteIndex=visualIndex;
-export function appearance(p,guest=false){const index=guest?(visualIndex(p)+1)%8:visualIndex(p),look=CAST[index];return `--character-image:url('assets/cast/${look.file}.png');--person-scale:${look.scale};--atlas-ratio:2/3;`;}
+export function appearance(p,guest=false){const base=visualIndex(p),pool=candidates('여',p.age),index=guest?pool[(pool.indexOf(base)+1)%pool.length]:base,look=CAST[index];return `--character-image:url('assets/cast/${look.file}.png');--person-scale:${look.scale};--atlas-ratio:2/3;`;}
 export function portrait(p){return `<div class="portrait individual-portrait" style="${appearance(p)}"><i></i></div>`;}
 // own=true: 방문자가 실제 입주자(연인)라 그 사람의 외모 그대로 그린다.
 export function actorArt(p,guest=false,own=false){return `<div class="actor ${guest?'guest':''}" data-actor="${guest?'guest':'resident'}" data-who="${own?p.id:'friend'}" style="${appearance(p,guest&&!own)}"><div class="actor-shadow"></div><div class="actor-body"><i class="whole-person"></i></div></div>`;}

@@ -1,9 +1,9 @@
 import { activeInteraction, validInteraction } from './interactions.js';
-import { nextAppearance, migrateAppearances, matchesGender } from './cast.js';
+import { nextAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
 import { elapsedGameMinutes } from './pace.js';
 import { tickStories, validStory } from './life-story.js';
 
-export const VERSION = 2;
+export const VERSION = 3;
 
 const surnames = ['김', '이', '박', '최', '정', '강', '윤', '임', '한', '오'];
 const names = {
@@ -45,14 +45,17 @@ function pickAttraction(rng) {
 }
 
 export function person(s) {
-  const gender = rand(2, s.rng) ? '여' : '남';
+  rand(2, s.rng); // Preserve the random stream used by existing simulations.
+  const gender = '여';
   const j = jobs[rand(jobs.length, s.rng)];
+  const name = surnames[rand(10, s.rng)] + names.여[rand(8, s.rng)];
+  const age = 20 + rand(20, s.rng);
   return {
     id: s.nextId++,
-    name: surnames[rand(10, s.rng)] + names[gender][rand(8, s.rng)],
+    name,
     gender,
-    visualId: nextAppearance(s, gender),
-    age: 20 + rand(20, s.rng),
+    visualId: nextAppearance(s, gender, age),
+    age,
     job: j[0], income: j[1], start: j[2], end: j[3],
     workdays: workdaysFor(j[4], rand(7, s.rng)),
     attraction: pickAttraction(s.rng),
@@ -78,6 +81,7 @@ const leaseTerm = s => 28 + rand(5, s.rng) * 7; // 게임 4~8주
 export function createGame(rng = Math.random, mode = 'cozy') {
   const s = {
     version: VERSION, mode, day: 1, minute: 480, cash: 1800, depositHeld: 0, nextId: 1,
+    residenceType: 'women-only',
     rooms: [], applications: [], logs: [], upgrades: { insulation: 0, plumbing: 0, lounge: 0 },
     earned: 0, spent: 0, issues: [], rng,
   };
@@ -486,6 +490,21 @@ const migrations = {
     s.applications.forEach(fill);
     s.version = 2;
   },
+  2: s => {
+    const people=[...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications],renames=[];
+    for(const p of people){
+      if(!p||!['남','여'].includes(p.gender)||!Number.isInteger(p.age)||p.age<20||p.age>39||typeof p.name!=='string')throw Error('입주자 정보가 올바르지 않습니다.');
+      if(p.visualId!==undefined&&!matchesGender(p.visualId,p.gender))throw Error('인물 이미지 정보가 올바르지 않습니다.');
+      if(p.gender==='남'){
+        const old=p.name,given=names.여[(p.id-1)%names.여.length];
+        p.gender='여';p.name=p.name.slice(0,1)+given;renames.push([old,p.name]);
+      }
+      if(!matchesAppearance(p.visualId,p))delete p.visualId;
+    }
+    migrateAppearances(s);
+    for(const item of [...(s.logs||[]),...(s.issues||[])])if(typeof item.text==='string')for(const [old,name] of renames)item.text=item.text.replaceAll(old,name);
+    s.residenceType='women-only';s.version=3;
+  },
 };
 
 export function restore(text) {
@@ -519,13 +538,14 @@ export function restore(text) {
 function validateSaveDetails(s) {
   const finite = (v, min = -Infinity, max = Infinity) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
   const fail = () => { throw Error('저장 파일의 상세 정보가 올바르지 않습니다.'); };
+  if(s.residenceType!=='women-only')fail();
   if (!finite(s.earned, 0) || !finite(s.spent, 0) || !finite(s.depositHeld, 0) || s.applications.length > 6 || s.logs.length > 100 || s.issues.length > 8 || s.nextId < 1) fail();
   const people = [...s.rooms.map(r => r.tenant).filter(Boolean), ...s.applications];
   for (const p of people) {
     if (!validStory(p)) fail();
     if (!validInteraction(p.interaction)) fail();
-    if (p.visualId !== undefined && !matchesGender(p.visualId, p.gender)) fail();
-    if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || !['남', '여'].includes(p.gender) || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();
+    if (p.visualId !== undefined && !matchesAppearance(p.visualId, p)) fail();
+    if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || p.gender !== '여' || p.age>39 || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();
     for (const k of ['energy', 'hunger', 'hygiene', 'connection', 'desire', 'happiness', 'social', 'tidy']) if (!finite(p[k], 0, 100)) fail();
     for (const k of ['income', 'budget', 'deposit', 'start', 'end', 'lowDays']) if (!finite(p[k], 0, 10000)) fail();
     if (p.start >= p.end || p.end > 24 || !Object.values(p.relations).every(v => finite(v, 0))) fail();
