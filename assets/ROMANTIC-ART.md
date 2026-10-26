@@ -1,0 +1,19 @@
+# ROOM19 photographic direction · 2026-10-26
+
+Tool: built-in ImageGen (no CLI/API fallback).
+Final asset: `assets/yongsan-bluehour-v2.png`, 1536 × 1024.
+The public reference was https://ordinarypeople1.github.io/room19-yongsan/ : charcoal UI, warm interior imagery, Seoul night photography. The new image is fictional generated environmental art, not a photograph of an identified property.
+
+The first generated image had four residential rows. A precise edit produced five rows × four windows. Runtime portrait targets are positioned on those twenty windows. Neither portraits nor text are baked into the background.
+
+## Initial generation prompt
+
+Use case: photorealistic-natural. Asset type: production background plate for ROOM19, an intimate Korean life simulation game. Create a cinematic photorealistic wide landscape 1536x1024 image of a real-feeling Yongsan Seoul residential neighborhood at blue hour after sunset, photographed from an opposite building with a 50mm architectural lens, almost perfectly straight-on facades, no keystone distortion. A beautiful modest five-story residential building is the main subject, centered horizontally at 58% of the image. Its front facade occupies x=39% to 76%, y=19% to 86% of the frame. Exactly FIVE upper residential floors with exactly FOUR equally sized SQUARE window bays per floor, a clear regular 5-row 4-column grid; ground floor below with a warmly lit entrance. The twenty dark glass window bays should be empty, simple and unobstructed, softly warm interior light around their recessed stone frames, suitable for overlaying clickable resident portrait tiles later. The building has authentic weathered warm grey stone, subtle brick and concrete, restrained dark metal window framing, a planted rooftop terrace, a small warm illuminated blank sign above the top row. Beautiful neighboring real buildings of varying heights recede to both left and right, distant Namsan hillside and tower barely visible in atmospheric haze, no skyscrapers obscuring main building. Muted deep blue and charcoal city ambience, warm amber window lights, a little wet-street reflection at bottom, lived-in romantic everyday Seoul mood, photographic material detail, subtle film grain, elegant and grounded, neither fantasy nor illustration. Upper left quarter is subdued dark blue sky with distant city silhouettes, enough calm space to overlay a short heading. Main building and window grid fully in frame. No text, no UI, no logos, no watermark, no people, no faces. This is actual environmental artwork, not a screenshot or UI mockup.
+
+## Final edit prompt
+
+Precise architectural edit. This image is the edit target and its photographic Seoul blue hour atmosphere, camera, materials, warm lights, surrounding buildings and overall composition must stay the same. Correct the MAIN CENTER BUILDING ONLY: it currently has FOUR rows of apartment windows. It MUST have EXACTLY FIVE rows of apartment windows above the separate ground-floor entrance, with FOUR windows per row, total TWENTY. Count carefully: floor 5, floor 4, floor 3, floor 2, floor 1, then the ground entrance below them. Add the missing fifth full residential floor, making the main building taller upwards if needed, or compressing ground floor slightly while keeping rooftop within frame. Keep all twenty windows equal size and regularly spaced, front facing, clean dark empty glass with warm recessed frames, approximately square. Preserve the building's facade horizontal position. Keep the entire main building and rooftop fully visible. No faces, people, text, UI or watermark. Same 1536x1024 landscape image.
+
+## Scope
+
+This is an evening art direction, not an accurate real-time sky/weather simulation. The game clock and resident activities continue independently. Existing room stills and resident portraits are preserved. The scene and all controls are separate; hover, keyboard focus, clicks, and conversation controls remain interactive.

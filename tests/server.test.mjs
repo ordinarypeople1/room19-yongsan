@@ -4,7 +4,7 @@ import {createServer} from '../http-server.mjs';
 import {parseOutput} from '../openrouter.mjs';
 async function using(t,options={}){const server=createServer({...options});await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>{server.closeAllConnections();server.close(r);}));return `http://127.0.0.1:${server.address().port}`;}
 test('public assets serve, server files and credentials never serve',async t=>{
-  const base=await using(t);assert.equal((await fetch(base)).status,200);assert.equal((await fetch(base+'/assets/cast/woman-01.png')).status,200);
+  const base=await using(t);assert.equal((await fetch(base)).status,200);assert.equal((await fetch(base+'/assets/cast/woman-01.png')).status,200);assert.equal((await fetch(base+'/romantic.css')).status,200);assert.equal((await fetch(base+'/assets/yongsan-bluehour-v2.png')).status,200);
   for(const path of ['/.env','/.env.example','/.git/config','/server.mjs','/openrouter.mjs','/package.json','/assets/../.env','/%2e%2e/.env'])assert.equal((await fetch(base+path)).status,404,path);
   const status=await(await fetch(base+'/api/status')).json();assert.equal(status.configured,false);
 });

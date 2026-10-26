@@ -61,4 +61,4 @@ npm test
 
 기존 `live-app.js`와 관련 아트·모션 파일은 이전 구현의 참고용으로 남아 있습니다. 현재 진입점은 `horizon-app.js`입니다.
 
-모든 입주자는 가상의 성인입니다. 이미지 출처와 생성 기록은 `assets/LIVE-ASSETS.md`, `assets/RESIDENCE-CREDITS.md`, `assets/cast/PROMPTS.md`를 참고하세요. 도시 배경은 CSS로 구현했습니다. 폰트는 Pretendard 공식 CDN을 사용하며 오프라인에서는 시스템 폰트로 대체됩니다.
+모든 입주자는 가상의 성인입니다. 이미지 출처와 생성 기록은 `assets/LIVE-ASSETS.md`, `assets/RESIDENCE-CREDITS.md`, `assets/cast/PROMPTS.md`를 참고하세요. 도시 배경은 내장 ImageGen으로 만든 실사 용산 블루아워 이미지입니다. 생성 기록은 `assets/ROMANTIC-ART.md`에 있습니다. 폰트는 Pretendard 공식 CDN을 사용하며 오프라인에서는 시스템 폰트로 대체됩니다.
