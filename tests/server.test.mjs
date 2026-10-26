@@ -35,3 +35,16 @@ test('model request contains scoped personality, needs, activity and memories',a
   const sent=JSON.parse(seen.messages[1].content);assert.equal(sent.personality.hobby,payload.personality.hobby);assert.equal(sent.context.activity,'이웃과 대화');assert(sent.memories.some(m=>m.label==='챙겨준 도시락'));assert.equal(result.reply,'소설을 읽는 시간이 좋아요.');assert(!JSON.stringify(sent).includes('test-secret'));
   payload.context.energy=500;assert(!validatePayload('dialogue',payload));
 });
+
+
+test('resident photos use the fixed Qwen model and trusted resident reference without leaking secrets',async t=>{
+  let called=0;const base=await using(t,{apiKey:'test-secret',model:'test/model',fetchImpl:async(url,options)=>{called++;assert.equal(url,'https://openrouter.ai/api/v1/images');const body=JSON.parse(options.body);assert.equal(body.model,'qwen/qwen-image-2.1-turbo');assert.equal(body.n,1);assert.equal(body.input_references[0].image_url.url,'https://ordinarypeople1.github.io/room19-yongsan/assets/cast/woman-02.png');return Response.json({data:[{b64_json:'aGVsbG8=',media_type:'image/png'}]});}});
+  const post=body=>fetch(base+'/api/photo',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const payload={prompt:'창가에서 차를 마시는 모습',portrait:'woman-02',age:32};
+  for(const invalid of [{...payload,portrait:'https://evil.example/x.png'},{...payload,age:17},{...payload,prompt:''},{...payload,prompt:'x'.repeat(601)}])assert.equal((await post(invalid)).status,400);
+  const response=await post(payload);assert.equal(response.status,200);const text=await response.text();assert(!text.includes('test-secret'));assert.equal(JSON.parse(text).image,'data:image/png;base64,aGVsbG8=');assert.equal(called,1);
+});
+test('provider failures never return an invented generated photo',async t=>{
+  const base=await using(t,{apiKey:'test-secret',model:'test/model',fetchImpl:async()=>Response.json({error:'provider failed'},{status:502})});
+  const response=await fetch(base+'/api/photo',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify({prompt:'차 마시는 모습',portrait:'woman-02',age:32})});assert.equal(response.status,502);assert.equal((await response.json()).image,undefined);
+});
