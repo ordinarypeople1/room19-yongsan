@@ -1,6 +1,7 @@
 import { activeInteraction, validInteraction } from './interactions.js';
 import { nextAppearance, migrateAppearances, matchesGender } from './cast.js';
 import { elapsedGameMinutes } from './pace.js';
+import { tickStories, validStory } from './life-story.js';
 
 export const VERSION = 2;
 
@@ -289,7 +290,7 @@ function decide(s, r, h, workday) {
     next = '수면';
     p.energy = clamp(p.energy + 2.5);
   } else if (workday && h >= p.start && h < p.end) next = '출근';
-  else if (activeInteraction(s, p)) return; // 관리인 개입에 반응하는 동안은 하던 반응을 유지
+  else if (activeInteraction(s, p) || p.storyUntil > s.day * 1440 + s.minute) return;
   else if (p.hygiene < 50 && !r.fault) {
     next = '샤워 · 비공개';
     p.hygiene = clamp(p.hygiene + 18);
@@ -448,6 +449,7 @@ export function step(s, minutes = 10) {
       decide(s, r, h, p.workdays.includes(today));
     }
     resolveVisits(s);
+    tickStories(s);
     for (const r of s.rooms) {
       const p = r.tenant;
       if (!p) continue;
@@ -520,6 +522,7 @@ function validateSaveDetails(s) {
   if (!finite(s.earned, 0) || !finite(s.spent, 0) || !finite(s.depositHeld, 0) || s.applications.length > 6 || s.logs.length > 100 || s.issues.length > 8 || s.nextId < 1) fail();
   const people = [...s.rooms.map(r => r.tenant).filter(Boolean), ...s.applications];
   for (const p of people) {
+    if (!validStory(p)) fail();
     if (!validInteraction(p.interaction)) fail();
     if (p.visualId !== undefined && !matchesGender(p.visualId, p.gender)) fail();
     if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || !['남', '여'].includes(p.gender) || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();
