@@ -2,18 +2,25 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame,step,restore,serialize} from '../sim.js';
 import {act} from '../life-story.js';
-import {activityEntry,ACTIVITY_LOG_LIMIT} from '../activity-log.js';
+import {activityEntry,recordActivities,ACTIVITY_LOG_LIMIT} from '../activity-log.js';
 import {personality,modelContext} from '../resident-context.js';
-test('minute progression records every game minute including midnight',()=>{
-  const s=createGame(()=>.3),p=s.rooms[0].tenant;s.minute=1438;step(s,4);
-  assert.deepEqual(p.activityLog.slice(-4).map(e=>[e.day,e.minute]),[[1,1439],[2,0],[2,1],[2,2]]);
-  assert.equal(s.minute,2);assert.equal(s.day,2);
+test('unchanged activities are not recorded again; changes keep minute timestamps across midnight',()=>{
+  const s=createGame(()=>.3),p=s.rooms[0].tenant;const count=p.activityLog.length;step(s,1);assert.equal(p.activityLog.length,count);
+  s.minute=1439;p.activity='독서';recordActivities(s);s.day=2;s.minute=2;p.activity='휴식';recordActivities(s);
+  assert.deepEqual(p.activityLog.slice(-2).map(e=>[e.day,e.minute]),[[1,1439],[2,2]]);
 });
-test('history is bounded, persists and validates imported minute entries',()=>{
-  const s=createGame(()=>.3);step(s,400);const p=s.rooms[0].tenant;
+test('history is bounded, persists and validates imported entries',()=>{
+  const s=createGame(()=>.3),p=s.rooms[0].tenant;
+  for(let i=0;i<300;i++){s.minute=500+i;p.activity=i%2?'독서':'휴식';recordActivities(s);}
   assert.equal(p.activityLog.length,ACTIVITY_LOG_LIMIT);assert.deepEqual(restore(serialize(s)).rooms[0].tenant.activityLog,p.activityLog);
   p.activityLog[0].minute=1440;assert.throws(()=>restore(serialize(s)));
 });
+test('old minute logs compact consecutive duplicates while keeping the original change time',()=>{
+  const s=createGame(()=>.3),p=s.rooms[0].tenant;p.activityLog=[];
+  for(const [minute,activity] of [[480,'휴식'],[481,'휴식'],[482,'독서'],[483,'독서']]){s.minute=minute;p.activity=activity;p.activityLog.push(activityEntry(s,p));}
+  assert.deepEqual(restore(serialize(s)).rooms[0].tenant.activityLog.map(e=>[e.minute,e.activity]),[[480,'휴식'],[482,'독서']]);
+});
+
 test('private descriptions follow actual activity and stay non-graphic',()=>{
   const s=createGame(()=>.3),p=s.rooms[0].tenant;p.activity='샤워 · 비공개';assert.equal(activityEntry(s,p).kind,'private');
   p.activity='둘만의 시간 · 비공개';assert.equal(activityEntry(s,p).kind,'adult');assert.match(activityEntry(s,p).text,/비공개|친밀/);

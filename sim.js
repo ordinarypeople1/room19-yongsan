@@ -2,7 +2,7 @@ import { activeInteraction, validInteraction } from './interactions.js';
 import { nextAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
 import { elapsedGameMinutes } from './pace.js';
 import { tickStories, validStory } from './life-story.js';
-import { recordActivities, validActivityLog } from './activity-log.js';
+import { recordActivities, validActivityLog, compactActivityLogs } from './activity-log.js';
 
 export const VERSION = 3;
 
@@ -441,7 +441,7 @@ export function step(s, minutes = 10) {
       s.minute -= 1440;
       midnight(s);
     }
-    if(s.minute%10!==0){recordActivities(s);continue;}
+    if(s.minute%10!==0)continue;
     const h = s.minute / 60;
     const today = weekday(s);
     for (const r of s.rooms) {
@@ -535,6 +535,7 @@ export function restore(text) {
   if (!['cozy', 'management'].includes(s.mode)) throw Error('지원하지 않는 생활 모드입니다.');
   validateSaveDetails(s);
   migrateAppearances(s);
+  compactActivityLogs(s);
   recordActivities(s);
   s.rng = Math.random;
   return s;
