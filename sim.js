@@ -2,6 +2,7 @@ import { activeInteraction, validInteraction } from './interactions.js';
 import { nextAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
 import { elapsedGameMinutes } from './pace.js';
 import { tickStories, validStory } from './life-story.js';
+import { recordActivities, validActivityLog } from './activity-log.js';
 
 export const VERSION = 3;
 
@@ -98,6 +99,7 @@ export function createGame(rng = Math.random, mode = 'cozy') {
     s.depositHeld += 500;
   }
   generateApplications(s);
+  recordActivities(s);
   log(s, '한강로 19길의 새 관리인이 되었습니다. 공실의 임대 조건을 확인하고 첫 입주자를 맞아보세요.', 'system');
   return s;
 }
@@ -433,12 +435,13 @@ function midnight(s) {
 }
 
 export function step(s, minutes = 10) {
-  for (let i = 0; i < minutes; i += 10) {
-    s.minute += 10;
+  for (let i = 0; i < minutes; i++) {
+    s.minute++;
     if (s.minute >= 1440) {
       s.minute -= 1440;
       midnight(s);
     }
+    if(s.minute%10!==0){recordActivities(s);continue;}
     const h = s.minute / 60;
     const today = weekday(s);
     for (const r of s.rooms) {
@@ -461,6 +464,7 @@ export function step(s, minutes = 10) {
       p.outfit = isAway(p) ? 'street' : 'home';
     }
     if (s.minute % 120 === 0 && h >= 18 && h <= 22) socialEvent(s);
+    recordActivities(s);
   }
 }
 
@@ -531,6 +535,7 @@ export function restore(text) {
   if (!['cozy', 'management'].includes(s.mode)) throw Error('지원하지 않는 생활 모드입니다.');
   validateSaveDetails(s);
   migrateAppearances(s);
+  recordActivities(s);
   s.rng = Math.random;
   return s;
 }
@@ -543,6 +548,7 @@ function validateSaveDetails(s) {
   const people = [...s.rooms.map(r => r.tenant).filter(Boolean), ...s.applications];
   for (const p of people) {
     if (!validStory(p)) fail();
+    if (!validActivityLog(p.activityLog)) fail();
     if (!validInteraction(p.interaction)) fail();
     if (p.visualId !== undefined && !matchesAppearance(p.visualId, p)) fail();
     if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || p.gender !== '여' || p.age>39 || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();

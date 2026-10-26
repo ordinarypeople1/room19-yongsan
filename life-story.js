@@ -1,5 +1,6 @@
 // Canonical interaction rules. Language models never write game state.
 import {clock} from './interactions.js';
+import {recordActivities} from './activity-log.js';
 
 export const LIFE_ACTIONS = [
   {id:'talk',label:'말 걸기',input:'오늘 하루 어땠는지 물어보기'},
@@ -71,6 +72,7 @@ export function act(s,roomId,intent,input) {
   p.story.push(event);p.story=p.story.slice(-24);
   if(accepted&&!event.pending){p.memories.push({day:s.day,label});p.memories=p.memories.slice(-8);}
   s.logs.unshift({day:s.day,minute:s.minute,text:`${r.id}호 ${p.name} · ${summary}`,type:'social'});s.logs=s.logs.slice(0,100);
+  recordActivities(s);
   return {event};
 }
 export function tickStories(s) {
