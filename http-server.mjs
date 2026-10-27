@@ -4,7 +4,7 @@ import {readFile,realpath} from 'node:fs/promises';
 import {resolve,extname,sep} from 'node:path';
 import {complete,validatePayload} from './openrouter.mjs';
 
-const PUBLIC=new Set(['index.html','favicon.ico','cast-preview.html','cast-preview.js','cast-preview.css','horizon.css','romantic.css','readability.css','horizon-app.js','ai-config.js','photos.js','photos.css','midnight.css','fx.js','cast-ready.js','cast-retired.js','sim.js','life-story.js','activity-log.js','resident-context.js','interactions.js','cast.js','motion.js','pace.js']);
+const PUBLIC=new Set(['index.html','favicon.ico','cast-preview.html','cast-preview.js','cast-preview.css','horizon.css','romantic.css','readability.css','horizon-app.js','ai-config.js','photos.js','photos.css','midnight.css','fx.js','cast-ready.js','cast-retired.js','sim.js','life-story.js','activity-log.js','resident-context.js','relationships.js','dialogue-memory.js','interactions.js','cast.js','motion.js','pace.js']);
 const TYPES={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.ico':'image/x-icon'};
 function json(res,status,value){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(value));}
 async function bodyOf(req){let bytes=0,parts=[];for await(const part of req){bytes+=part.length;if(bytes>32768)throw Error('large');parts.push(part);}return JSON.parse(Buffer.concat(parts).toString());}

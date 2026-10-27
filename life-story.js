@@ -1,3 +1,5 @@
+import {playerStage,PLAYER_STAGE_LABELS,relationshipAction,validRelationships} from './relationships.js';
+import {STORY_LIMIT,rememberConversation,validDialogueMemory} from './dialogue-memory.js';
 // Canonical interaction rules. Language models never write game state.
 import {clock} from './interactions.js';
 import {recordActivities} from './activity-log.js';
@@ -8,12 +10,16 @@ export const LIFE_ACTIONS = [
   {id:'gift',label:'도시락 건네기',input:'도시락을 건네기'},
   {id:'help',label:'정리 도와주기',input:'방 정리를 도와주겠다고 제안하기'},
   {id:'message',label:'메시지 남기기',input:'오늘도 수고했다고 메시지 남기기'},
+  {id:'date',label:'데이트 제안',input:'둘이 차를 마시는 데이트를 제안하기',group:'relationship'},
+  {id:'confess',label:'교제 제안',input:'서로의 마음을 확인하고 교제를 제안하기',group:'relationship'},
+  {id:'breakup',label:'교제 마무리',input:'교제를 끝내고 싶다고 차분하게 이야기하기',group:'relationship'},
+  {id:'introduce',label:'이웃 소개',input:'아직 모르는 입주민을 소개해주기',group:'relationship'},
 ];
 export const INTENTS = [...LIFE_ACTIONS.map(a=>a.id),'unknown'];
 const cap = n=>Math.max(0,Math.min(100,n));
 export const away = p=>['출근','외출','연인 집에 감'].includes(p?.activity);
 export const privateTime = p=>p?.activity==='수면'||p?.activity?.includes('비공개');
-export function relationship(p) {const n=p?.playerBond||0;return n>=60?'마음을 나누는 이웃':n>=30?'편안한 이웃':n>=10?'인사를 나누는 사이':'아직 알아가는 사이';}
+export function relationship(p) {return PLAYER_STAGE_LABELS[playerStage(p)];}
 export function inferIntent(input) {
   // Deliberately conservative offline grammar; unsupported commands never become actions.
   const t=input.trim().replace(/[.!?。！？]+$/,'');
@@ -23,6 +29,9 @@ export function inferIntent(input) {
   if(/^도시락(을)? (건네기|주기|선물하기)$/.test(t))return 'gift';
   if(/^(방 )?(정리|청소)(를)? 도와(주기|줄게|줄까요)$/.test(t))return 'help';
   if(/^메시지(를)? 남기기$/.test(t))return 'message';
+  if(/^(데이트(할래요?|해요|하자)|우리 (데이트할래|사귈래|사귀자)|나랑 (사귈래|사귀자)|사귀자|교제하자)$/.test(t))return /데이트/.test(t)?'date':'confess';
+  if(/^(우리 )?(헤어지자|그만 만나자|교제를 마무리하자)$/.test(t))return 'breakup';
+  if(/^(이웃 소개|다른 입주민을 소개해줘)$/.test(t))return 'introduce';
   return 'unknown';
 }
 export function canAct(s,p,intent) {
@@ -43,7 +52,8 @@ export function act(s,roomId,intent,input) {
   const followup=intent==='talk'&&p.lastTalkRewardAt!==undefined&&clock(s)-p.lastTalkRewardAt<20;
   const previous=p.memories.at(-1),unavailable=away(p)||privateTime(p);
   let accepted=true,summary='',reply='',effect='',activity=null,bond=0;
-  if(intent==='message') {
+  if(['date','confess','breakup','introduce'].includes(intent)){const result=relationshipAction(s,r,intent);({accepted,summary,reply,effect,bond}=result);activity=result.activity||null;
+  } else if(intent==='message') {
     summary=unavailable?'문 앞에 안부 메시지를 남겼다. 다음에 여유가 생기면 읽을 것이다.':'안부 메시지를 건넸다.';
     reply=unavailable?'':previous?'기억해주셨네요. 고마워요.':'안부 고마워요. 오늘도 잘 보내세요.';
     bond=unavailable?0:2;effect=unavailable?'메시지 전달 대기':'친밀감 +2';
@@ -68,9 +78,9 @@ export function act(s,roomId,intent,input) {
   }
   p.playerBond=cap(p.playerBond+bond);p.storyNextAt=clock(s)+20;
   if(activity){p.activity=activity;p.storyUntil=clock(s)+20;}
-  const label={talk:'나눴던 이야기',meal:'함께한 식사',gift:'챙겨준 도시락',help:'함께한 방 정리',message:'남겨준 메시지'}[intent];
+  const label={talk:'나눴던 이야기',meal:'함께한 식사',gift:'챙겨준 도시락',help:'함께한 방 정리',message:'남겨준 메시지',date:'함께한 데이트',confess:'서로 확인한 마음',breakup:'마음을 정리한 대화',introduce:'새 이웃과의 인사'}[intent];
   const event={id:s.nextId++,day:s.day,minute:s.minute,intent,input:input.trim(),summary,reply,effect,accepted,pending:intent==='message'&&unavailable,source:'local'};
-  p.story.push(event);p.story=p.story.slice(-24);
+  p.story.push(event);p.story=p.story.slice(-STORY_LIMIT);rememberConversation(p,event);
   if(accepted&&!event.pending&&!followup){p.memories.push({day:s.day,label});p.memories=p.memories.slice(-8);}
   s.logs.unshift({day:s.day,minute:s.minute,text:`${r.id}호 ${p.name} · ${summary}`,type:'social'});s.logs=s.logs.slice(0,100);
   recordActivities(s);
@@ -95,11 +105,12 @@ export function sceneText(r) {
 }
 export function validStory(p) {
   const num=(n,max=1e9)=>Number.isSafeInteger(n)&&n>=0&&n<=max;
+  if(!validRelationships(p)||!validDialogueMemory(p.dialogueMemory))return false;
   if(p.playerBond!==undefined&&!num(p.playerBond,100))return false;
   if(p.storyUntil!==undefined&&!num(p.storyUntil))return false;
   if(p.storyNextAt!==undefined&&!num(p.storyNextAt))return false;
   if(p.lastSeenStory!==undefined&&!num(p.lastSeenStory))return false;
   if(p.lastTalkRewardAt!==undefined&&!num(p.lastTalkRewardAt))return false;
   if(p.memories!==undefined&&(!Array.isArray(p.memories)||p.memories.length>8||!p.memories.every(m=>m&&num(m.day)&&typeof m.label==='string'&&m.label.length<=80)))return false;
-  return p.story===undefined||(Array.isArray(p.story)&&p.story.length<=24&&p.story.every(e=>e&&num(e.id)&&num(e.day)&&num(e.minute,1439)&&INTENTS.includes(e.intent)&&typeof e.accepted==='boolean'&&typeof e.pending==='boolean'&&['local','openrouter'].includes(e.source)&&['input','summary','reply','effect'].every(k=>typeof e[k]==='string'&&e[k].length<=600)));
+  return p.story===undefined||(Array.isArray(p.story)&&p.story.length<=STORY_LIMIT&&p.story.every(e=>e&&num(e.id)&&num(e.day)&&num(e.minute,1439)&&INTENTS.includes(e.intent)&&typeof e.accepted==='boolean'&&typeof e.pending==='boolean'&&['local','openrouter'].includes(e.source)&&['input','summary','reply','effect'].every(k=>typeof e[k]==='string'&&e[k].length<=600)));
 }
