@@ -63,6 +63,29 @@ export function newAppearance(s,gender,age){
 export const retiredAppearance=(index,p)=>matchesGender(index,p.gender)&&RETIRED.has(CAST[index]?.file)&&Math.abs(CAST[index].age-p.age)<=2;
 export function migrateAppearances(s){
   const people=[...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications];
-  for(const p of people)if(p.visualId===undefined||retiredAppearance(p.visualId,p))p.visualId=nextAppearance(s,p.gender,p.age);
+  const owners=new Map(),assigned=new Map();
+  // Keep existing distinct identities first. Duplicate and retired slots need repair.
+  for(const p of people)if(matchesAppearance(p.visualId,p)&&!owners.has(p.visualId)){
+    owners.set(p.visualId,p);assigned.set(p,p.visualId);
+  }
+  // Move age-flexible residents when needed to free a face for a narrower age group.
+  // Saved ages and personal information remain unchanged.
+  function assign(p,seen=new Set()){
+    const eligible=candidates(p.gender,p.age);
+    eligible.sort((a,b)=>Number(owners.has(a))-Number(owners.has(b)));
+    for(const i of eligible){
+      if(seen.has(i))continue;
+      seen.add(i);
+      const owner=owners.get(i);
+      if(!owner||assign(owner,seen)){
+        owners.set(i,p);assigned.set(p,i);return true;
+      }
+    }
+    return false;
+  }
+  for(const p of people)if(!assigned.has(p))assign(p);
+  for(const [p,i] of assigned)p.visualId=i;
+  // Extremely old saves can exceed the available portraits for a single age group.
+  for(const p of people)if(!assigned.has(p))p.visualId=nextAppearance(s,p.gender,p.age);
   return s;
 }
