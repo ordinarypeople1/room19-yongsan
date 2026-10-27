@@ -1,3 +1,5 @@
+import {sharedNeighborMemory} from './relationships.js';
+import {hydrateDialogueMemory} from './dialogue-memory.js';
 import { activeInteraction, validInteraction } from './interactions.js';
 import { newAppearance, retiredAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
 import { elapsedGameMinutes } from './pace.js';
@@ -98,9 +100,11 @@ export function createGame(rng = Math.random, mode = 'cozy') {
     r.laundry = 10 + rand(30, s.rng);
     s.depositHeld += 500;
   }
+  const initial=s.rooms.filter(r=>r.tenant);
+  for(let i=0;i<initial.length-1;i++){const a=initial[i].tenant,b=initial[i+1].tenant;a.relations[b.id]=12;b.relations[a.id]=12;sharedNeighborMemory(s,a,b,'공동 현관에서 서로 인사를 나눴다.');}
   generateApplications(s);
   recordActivities(s);
-  log(s, '한강로 19길의 새 관리인이 되었습니다. 공실의 임대 조건을 확인하고 첫 입주자를 맞아보세요.', 'system');
+  log(s, '한강로 19길의 건물주가 되었습니다. 공실의 임대 조건을 확인하고 첫 입주자를 맞아보세요.', 'system');
   return s;
 }
 
@@ -184,6 +188,7 @@ const roomOf = (s, p) => s.rooms.find(r => r.tenant === p);
 function breakUp(s, p, q, reason) {
   p.partner = null;
   q.partner = null;
+  sharedNeighborMemory(s,p,q,'서로 교제를 마치고 각자의 생활로 돌아갔다.');
   p.happiness = clamp(p.happiness - 12);
   q.happiness = clamp(q.happiness - 12);
   log(s, `${p.name} · ${q.name}, ${reason}`, 'social');
@@ -216,10 +221,12 @@ function socialEvent(s) {
   q.connection = clamp(q.connection + 20);
   p.happiness = clamp(p.happiness + 3);
   q.happiness = clamp(q.happiness + 3);
+  sharedNeighborMemory(s,p,q,'공용 공간에서 서로 안부를 묻고 대화를 나눴다.');
   const spark = 0.25 + chemistry(p, q) * 0.6;
-  if (relation >= 60 && !p.partner && !q.partner && compatible(p, q) && s.rng() < spark) {
+  if (relation >= 60 && !p.partner && !q.partner && p.playerStatus!=='dating' && q.playerStatus!=='dating' && compatible(p, q) && s.rng() < spark) {
     p.partner = q.id;
     q.partner = p.id;
+    sharedNeighborMemory(s,p,q,'서로 마음을 확인하고 교제하기로 합의했다.');
     log(s, `${p.name} · ${q.name}, 서로의 마음을 확인했습니다. 함께하는 시간이 늘어납니다.`, 'social');
   } else
     log(s, `${a.id}호 ${p.name}와 ${b.id}호 ${q.name}, ${s.upgrades.lounge ? '옥상 라운지' : '공동 현관'}에서 대화를 나눴습니다.`, 'social');
@@ -535,6 +542,7 @@ export function restore(text) {
   if (!['cozy', 'management'].includes(s.mode)) throw Error('지원하지 않는 생활 모드입니다.');
   validateSaveDetails(s);
   migrateAppearances(s);
+  for(const p of [...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications])hydrateDialogueMemory(p);
   compactActivityLogs(s);
   recordActivities(s);
   s.rng = Math.random;
@@ -565,6 +573,7 @@ function validateSaveDetails(s) {
     if (!Array.isArray(p.recent) || p.recent.length > 6 || !p.recent.every(a => typeof a === 'string' && a.length <= 100)) fail();
     if (p.busy !== null && (typeof p.busy !== 'object' || typeof p.busy.activity !== 'string' || !finite(p.busy.ticks, 0, 100))) fail();
   }
+  if(people.filter(p=>p.playerStatus==='dating').length>1)fail();
   for (const p of s.applications) if (!Number.isInteger(p.applied) || p.applied < 1 || p.applied > s.day) fail();
   for (const r of s.rooms) {
     if (r.fault && (typeof r.fault.name !== 'string' || !finite(r.fault.cost, 0, 1000))) fail();
