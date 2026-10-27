@@ -1,0 +1,35 @@
+name: Generate resident cast images
+# 수동 실행 전용. 저장소 Secrets 에 OPENROUTER_API_KEY 를 등록한 뒤 Actions 탭에서 실행하세요.
+# 결과는 main 이 아니라 cast-pool 브랜치로 올라가므로 확인한 뒤 병합하면 됩니다.
+on:
+  workflow_dispatch:
+    inputs:
+      redo:
+        description: 'woman-05~08 도 새 인상으로 다시 생성'
+        type: boolean
+        default: true
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate images
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ "${{ inputs.redo }}" = "true" ]; then npm run cast:generate -- --redo; else npm run cast:generate; fi
+      - name: Run tests
+        run: npm test
+      - name: Push to cast-pool branch
+        run: |
+          git config user.name "room19-cast-bot"
+          git config user.email "room19-cast-bot@users.noreply.github.com"
+          git checkout -b cast-pool
+          git add assets/cast cast-ready.js
+          git commit -m "Add generated resident cast images" || echo "nothing to commit"
+          git push --force origin cast-pool

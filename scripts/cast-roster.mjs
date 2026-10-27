@@ -1,0 +1,63 @@
+// ROOM19 여성 입주자 이미지 풀(30명). 얼굴·헤어·체형·피부톤·소품·옷 색을 서로 겹치지 않게 설계했습니다.
+// cast.js의 CAST(woman-05 이후)와 파일명·나이·라벨이 일치해야 하며 tests/cast.test.mjs가 확인합니다.
+// redo: true 는 기존 woman-05~08처럼 서로 비슷해 보여 새 인상으로 다시 생성하는 항목입니다.
+export const BACKDROP = '#26233D';
+
+export const ROSTER = [
+  {file:'woman-05',age:21,scale:.96,redo:true,label:'양갈래 낮은 묶음 · 밝은 갭티스 미소',
+   subject:'Korean adult woman age 21, double low pigtails with wispy side-swept bangs, hair dyed warm chocolate brown with caramel balayage ends, round soft face, bright double-eyelid almond eyes, tiny gap between front teeth showing in a wide cheerful smile, rosy cheeks, slim petite build. Oversized sky-blue crewneck sweatshirt, white cotton lounge shorts, fuzzy white slippers'},
+  {file:'woman-06',age:26,scale:.98,redo:true,label:'허리까지 오는 버건디 웨이브 · 짙은 눈썹',
+   subject:'Korean adult woman age 26, long mid-back wavy hair dyed deep burgundy brown, oval face, strong straight dark eyebrows, full lips with a calm half-smile, warm medium skin tone, average height, softly athletic build. Terracotta chunky knit cardigan over an opaque cream tee, dark gray lounge pants, slippers'},
+  {file:'woman-07',age:34,scale:1,redo:true,label:'코퍼 컬러 짧은 레이어드 · 높은 콧대',
+   subject:'Korean adult woman age 34, short layered shag haircut dyed dark copper red, long narrow face, high nose bridge, thin lips, light freckles across the nose, composed intelligent expression, tall slim build. Olive cotton long-sleeve top, oatmeal wide-leg lounge trousers, slippers'},
+  {file:'woman-08',age:39,scale:.98,redo:true,label:'낮은 시뇽 · 넓은 이마 · 진주 귀걸이',
+   subject:'Korean adult woman age 39, jet-black hair gathered in a tidy low chignon, broad forehead, wide-set gentle eyes, soft jawline with faint smile lines, small pearl stud earrings, no glasses, warm dignified expression, medium build with rounded shoulders. Navy cardigan over an opaque ivory blouse, soft gray lounge trousers, slippers'},
+  {file:'woman-09',age:23,scale:1.01,label:'하이 포니테일 · 햇볕에 그을린 러너',
+   subject:'Korean adult woman age 23, lean athletic runner build, sun-tanned skin, high ponytail of honey-brown dyed hair with sun-bleached ends, prominent cheekbones, sharp upturned eyes, a deep dimple on the left cheek, confident grin. Charcoal zip hoodie over an opaque white tank top, black joggers, bright white sneakers-style slippers'},
+  {file:'woman-10',age:30,scale:1.03,label:'허리 아래 생머리 · 일자 앞머리 · 붉은 입술',
+   subject:'Korean adult woman age 30, very tall and slender, pale cool-toned skin, waist-length perfectly straight jet-black hair with blunt full bangs, long oval face, narrow elegant phoenix eyes, deep crimson lips, composed serious expression. Deep emerald opaque button-up pajama set with piping, black slippers'},
+  {file:'woman-11',age:27,scale:.93,label:'볼륨 오번 펌 · 코 피어싱 · 장난스러운 미소',
+   subject:'Korean adult woman age 27, petite and curvy, warm olive skin, voluminous shoulder-length permed dark auburn curls, round face, big round brown eyes, thick brows, tiny nose stud, playful lopsided grin. Oversized teal knit sweater, cream cotton shorts, striped socks and slippers'},
+  {file:'woman-12',age:35,scale:1,label:'은회색 짧은 크롭 · 각진 턱 · 데님 셔츠',
+   subject:'Korean adult woman age 35, sturdy broad-shouldered build, stylish short cropped silver-gray hair with a tidy undercut, square face with strong jawline, visible laugh lines, light brown skin, small gold hoop earrings, no glasses, warm amused expression. Washed denim button shirt over an opaque black tee, black lounge pants, slippers'},
+  {file:'woman-13',age:22,scale:.98,label:'라벤더 양쪽 땋은 머리 · 교정기 · 동그란 얼굴',
+   subject:'Korean adult woman age 22, very slim and tall, fair skin, pastel lavender dyed hair in two long loose braids, round baby-faced oval face, thin metal braces visible in a shy smile, light eyebrows, clearly an adult in her early twenties. Pastel lilac lounge set with an opaque long-sleeve top, white slippers'},
+  {file:'woman-14',age:33,scale:.97,label:'굵은 외줄 땋은 머리 · 풍성한 체형 · 입가 점',
+   subject:'Korean adult woman age 33, tall plus-size build, warm tan skin, thick dark-brown braid over one shoulder, round face with deep dimples, kind droopy eyes, a small beauty mark above the right lip, warm laugh. Maroon wrap cardigan over an opaque black tee, black lounge pants, slippers'},
+  {file:'woman-15',age:28,scale:1,label:'비대칭 버건디 단발 · 날카로운 턱 · 여러 개의 귀걸이',
+   subject:'Korean adult woman age 28, asymmetrical sharp bob dyed deep wine red, angular jaw, narrow cat-like eyes, pale skin, several small silver earrings in both ears, cool deadpan expression with a hint of a smile, slim build. Black long-sleeve top with pushed-up sleeves, charcoal pants, black slippers'},
+  {file:'woman-16',age:25,scale:.95,label:'구릿빛 하이라이트 웨이브 · 통통한 볼 · 꽃 핀',
+   subject:'Korean adult woman age 25, soft chubby cheeks, large double-eyelid eyes with thick lashes, long loose beach waves in dark brown with copper highlights, a small flower hair clip, tanned golden skin, soft curvy build, sweet open smile. Coral oversized tee, light denim shorts, white slippers'},
+  {file:'woman-17',age:36,scale:1.01,label:'깊은 옆 가르마 밤색 롭 · 높은 이마 · 단정한 인상',
+   subject:'Korean adult woman age 36, tall slim build, sleek chestnut brown lob with a deep side part, high forehead, thin straight nose, thin lips, subtle crow\'s feet, dignified quiet expression. Camel turtleneck sweater, ivory wide trousers, tan slippers'},
+  {file:'woman-18',age:20,scale:.94,label:'보울 컷 · 짧은 앞머리 · 작고 둥근 얼굴',
+   subject:'Korean adult woman age 20, short black bowl cut with micro bangs, small round face, button nose, large round dark eyes, petite slim build, clearly adult but youthful, curious expression. Baggy heather-gray sweatshirt, navy sweatpants, gray slippers'},
+  {file:'woman-19',age:31,scale:1,label:'가운데 가르마 긴 흑발 · 짙은 일자 눈썹 · 벌어진 앞니',
+   subject:'Korean adult woman age 31, athletic and curvy, medium tan skin, very long thick black hair worn loose with a center part, strong straight eyebrows, almond eyes, full lips, a small gap between the front teeth, relaxed half-smile. Navy and white striped opaque pajama shirt, navy lounge pants, slippers'},
+  {file:'woman-20',age:37,scale:.95,label:'따뜻한 갈색 레이어드 · 관자놀이 새치 · 큰 웃음',
+   subject:'Korean adult woman age 37, petite small-boned build, short layered hair dyed warm brown with a few natural gray streaks at the temples, oval face, warm laugh lines, wide teeth-showing smile, fair-neutral skin. Dusty-blue linen shirt, cream trousers, straw-colored slippers'},
+  {file:'woman-21',age:24,scale:1.02,label:'울프컷 · 남색 빛 흑발 · 눈 밑 점',
+   subject:'Korean adult woman age 24, tall swimmer\'s shoulders, tousled wolf cut in blue-black hair, delicate oval face with soft jaw, monolid eyes, a small mole under the left eye, shy gentle smile. Oversized black crewneck sweatshirt, gray sweatpants, black slippers'},
+  {file:'woman-22',age:29,scale:.98,label:'볼륨 오번 웨이브 · 하트형 얼굴 · 자신감 있는 미소',
+   subject:'Korean adult woman age 29, hourglass curvy build, voluminous shoulder-length layered copper-auburn waves, heart-shaped face, strongly arched brows, full cheeks, golden tan skin, confident smirk. Forest-green ribbed lounge cardigan over an opaque black camisole top, black lounge pants, slippers'},
+  {file:'woman-23',age:32,scale:1.03,label:'반묶음 애쉬브라운 · 긴 얼굴 · 주근깨',
+   subject:'Korean adult woman age 32, lanky tall build, ash-brown hair in a loose half-up bun, long face, hooded gentle eyes, prominent nose, light freckles, soft thoughtful expression. Gray-blue flannel shirt over an opaque white tee, dark denim jeans, gray slippers'},
+  {file:'woman-24',age:38,scale:.97,label:'짧은 자연 웨이브 · 푸근한 얼굴 · 따뜻한 갈색 피부',
+   subject:'Korean adult woman age 38, plus-size mature build, short natural wavy haircut with swept bangs in dark brown, round soft face, warm light-brown skin, gentle eyes with smile creases, kind smile. Coral-orange blouse, navy trousers, cream slippers'},
+  {file:'woman-25',age:26,scale:.97,label:'뿌리 보이는 허니 블론드 · 작은 하트 얼굴',
+   subject:'Korean adult woman age 26, shoulder-length straight honey-blonde dyed hair with grown-out dark roots, small heart-shaped face, upturned nose, wide-set eyes, pale skin with pink cheeks, slim build, bashful smile. Red and white striped long-sleeve tee, gray lounge pants, red slippers'},
+  {file:'woman-26',age:34,scale:1,label:'헝클어진 탑 넛 · 야외 활동으로 그을린 피부',
+   subject:'Korean adult woman age 34, medium height with strong athletic calves, dark brown hair in a messy top knot with loose strands, wide face, thick straight brows, tanned skin with faint sun lines, open friendly expression. Sky-blue technical fleece pullover, black leggings, gray slippers'},
+  {file:'woman-27',age:39,scale:1.01,label:'자두빛 갈색 웨이브 · 높은 광대 · 단정한 붉은 립',
+   subject:'Korean adult woman age 39, elegant slender build, long softly waved hair dyed deep plum brown, high prominent cheekbones, angular face, muted brick-red lipstick, poised serious expression. Charcoal opaque blouse with small pearl earrings, black trousers, black slippers'},
+  {file:'woman-28',age:21,scale:.94,label:'쌍 올림머리 · 통통하고 둥근 얼굴 · 환한 웃음',
+   subject:'Korean adult woman age 21, short and soft build, round chubby face, hair in two high space buns of dark brown with loose side wisps, bright eyes, rosy cheeks, big bright smile, clearly an adult. Oversized peach hoodie, white cotton shorts, fuzzy slippers'},
+  {file:'woman-29',age:28,scale:1.03,label:'귀 뒤로 넘긴 턱선 단발 · 짙은 피부 · 시크한 미소',
+   subject:'Korean adult woman age 28, tall broad-shouldered build, deeper brown skin tone, straight jaw-length black hair tucked behind her ears, strong nose, thin eyebrows, wide mouth with a dry amused smirk. Indigo ribbed long-sleeve knit top, light gray lounge pants, indigo slippers'},
+  {file:'woman-30',age:30,scale:.94,label:'구름 같은 펌 · 에어리 앞머리 · 동그란 안경',
+   subject:'Korean adult woman age 30, tiny frame, fluffy cloud-like permed light-brown medium-length hair with airy curtain bangs, round tortoiseshell glasses, warm peach-pale skin, shy sweet smile. Peach linen long-sleeve shirt, cream lounge pants, beige slippers'},
+];
+
+export function promptFor(entry) {
+  return `Photorealistic studio casting photograph for a fictional women-only residence game. ONE PERSON ONLY, a fictional adult Korean woman, full body from hair to slippers, straight-on view, relaxed neutral standing pose with arms naturally at her sides, centered on a portrait 2:3 canvas with the top of her head at 5% height and her feet at 95%. Subject: ${entry.subject}. Realistic Korean facial features with a clearly individual, memorable face that does not resemble a generic idol and does not resemble any other resident; accurate apparent age of ${entry.age}; natural unretouched skin texture; modest everyday homewear that fully covers the body. Soft even neutral lighting. Seamless flat solid ${BACKDROP} backdrop, no gradient, no vignette, no floor, no cast shadow, no props, no text, no logos, no watermark.`;
+}
