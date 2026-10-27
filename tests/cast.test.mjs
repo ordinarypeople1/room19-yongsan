@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame,serialize,restore,person} from '../sim.js';
-import {CAST,visualIndex,candidates,matchesAppearance,newAppearance} from '../cast.js';
+import {CAST,visualIndex,candidates,matchesAppearance,newAppearance,migrateAppearances} from '../cast.js';
 import {appearance,portrait} from '../live-art.js';
 import {readFileSync,existsSync} from 'node:fs';
 import {ROSTER,promptFor} from '../scripts/cast-roster.mjs';
@@ -20,6 +20,41 @@ test('old saves gain balanced appearance identities without changing their peopl
   assert.deepEqual(residents.map(p=>[p.id,p.name,p.age]),before);
   assert(residents.every(p=>matchesAppearance(p.visualId,p)));
   assert.deepEqual(restore(serialize(loaded)).rooms,loaded.rooms);
+});
+
+test('saved duplicate faces are repaired without changing residents or progress',()=>{
+  const s=createGame(()=>.2),people=[...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications];
+  const original=people.map(p=>({...p}));
+  const before=people.map(p=>[p.id,p.name,p.age,p.partner,p.relations]);
+  for(let i=1;i<people.length;i++){
+    const duplicate=people.slice(0,i).find(p=>matchesAppearance(p.visualId,people[i]));
+    if(duplicate)people[i].visualId=duplicate.visualId;
+  }
+  assert(new Set(people.map(p=>p.visualId)).size<people.length);
+  const loaded=restore(serialize(s)),repaired=[...loaded.rooms.map(r=>r.tenant).filter(Boolean),...loaded.applications];
+  assert.equal(new Set(repaired.map(p=>p.visualId)).size,repaired.length);
+  assert.deepEqual(repaired.map(p=>[p.id,p.name,p.age,p.partner,p.relations]),before);
+  assert(repaired.every(p=>matchesAppearance(p.visualId,p)));
+  assert.equal(loaded.cash,s.cash);assert.equal(loaded.day,s.day);
+  assert.deepEqual(restore(serialize(loaded)).rooms,loaded.rooms);
+  const distinct={rooms:original.map(tenant=>({tenant})),applications:[]};
+  migrateAppearances(distinct);
+  assert.deepEqual(distinct.rooms.map(r=>r.tenant.visualId),original.map(p=>p.visualId));
+});
+
+test('duplicate migration frees flexible age matches for residents with fewer choices',()=>{
+  const id=file=>CAST.findIndex(c=>c.file===file);
+  const people=[
+    {gender:'여',age:40,visualId:id('woman-08')},
+    {gender:'여',age:40,visualId:id('woman-17')},
+    {gender:'여',age:37,visualId:id('woman-08')},
+  ];
+  const s={rooms:people.map(tenant=>({tenant})),applications:[]};
+  migrateAppearances(s);
+  assert.equal(new Set(people.map(p=>p.visualId)).size,3);
+  assert(people.every(p=>matchesAppearance(p.visualId,p)));
+  const once=people.map(p=>p.visualId);migrateAppearances(s);
+  assert.deepEqual(people.map(p=>p.visualId),once);
 });
 test('portrait and actor share the resident identity; imports reject invalid slots',()=>{
   const s=createGame(()=>.1),p=s.rooms[0].tenant;
