@@ -1,5 +1,5 @@
 import { activeInteraction, validInteraction } from './interactions.js';
-import { newAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
+import { newAppearance, retiredAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
 import { elapsedGameMinutes } from './pace.js';
 import { tickStories, validStory } from './life-story.js';
 import { recordActivities, validActivityLog, compactActivityLogs } from './activity-log.js';
@@ -551,7 +551,7 @@ function validateSaveDetails(s) {
     if (!validStory(p)) fail();
     if (!validActivityLog(p.activityLog)) fail();
     if (!validInteraction(p.interaction)) fail();
-    if (p.visualId !== undefined && !matchesAppearance(p.visualId, p)) fail();
+    if (p.visualId !== undefined && !matchesAppearance(p.visualId, p) && !retiredAppearance(p.visualId,p)) fail();
     if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || p.gender !== '여' || p.age>49 || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();
     for (const k of ['energy', 'hunger', 'hygiene', 'connection', 'desire', 'happiness', 'social', 'tidy']) if (!finite(p[k], 0, 100)) fail();
     for (const k of ['income', 'budget', 'deposit', 'start', 'end', 'lowDays']) if (!finite(p[k], 0, 10000)) fail();

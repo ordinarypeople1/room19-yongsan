@@ -247,3 +247,9 @@ dialog::backdrop{background:radial-gradient(circle at 50% 28%,rgba(58,34,120,.78
   .event-dot,.live-dot,.vf-dot,.viewfinder.busy img,.skeleton-frame,#command-form[aria-busy=true] .command-field{animation:none}
   button:hover,.room-tile:hover,.minute-entry:hover,.generated-photo:hover{transform:none}
 }
+
+/* Face crops already contain the intended framing; never zoom the full-body source. */
+.face,.room-tile .face,.profile-photo .face,.avatar .face,.mini-face .face{background-image:none;background-size:cover;background-position:center;overflow:hidden}
+.face img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;image-rendering:auto}
+.profile-photo .face img{object-fit:cover;object-position:center}
+.profile-photo:hover .face{transform:none}

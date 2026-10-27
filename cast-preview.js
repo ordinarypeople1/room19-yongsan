@@ -1,6 +1,6 @@
 import {CAST} from './cast.js';
 import {READY_FILES} from './cast-ready.js';
-const ready=new Set(READY_FILES),women=CAST.filter(p=>p.gender==='여');
+const ready=new Set(READY_FILES),women=CAST.filter(p=>p.gender==='여'&&ready.has(p.file));
 function render(decade='all'){
  const visible=women.filter(p=>decade==='all'||Math.floor(p.age/10)*10===Number(decade));
  document.querySelector('#count').textContent=`${visible.length}명 · 이미지 준비 ${visible.filter(p=>ready.has(p.file)).length}명 · 한국인 성인 여성`;

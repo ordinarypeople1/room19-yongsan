@@ -1,8 +1,9 @@
 // Individual assets, never columns sliced from a shared group photograph.
 // woman-01~04 와 남성 4종은 기존 저장의 인덱스를 보존합니다. woman-05 이후는 scripts/cast-roster.mjs 와 같은 내용입니다.
 // 이미지 파일이 실제로 있는 인물만 cast-ready.js 에 등록되어 새 입주자에게 배정됩니다.
+import {RETIRED_FILES} from './cast-retired.js';
 import {READY_FILES} from './cast-ready.js';
-const READY=new Set(READY_FILES);
+const READY=new Set(READY_FILES),RETIRED=new Set(RETIRED_FILES);
 export const CAST = [
   // Legacy indices remain stable so older saves can be migrated safely.
   {file:'man-01',gender:'남',age:36,label:'둥근 얼굴 · 짧은 머리',scale:.94},
@@ -40,7 +41,7 @@ export const CAST = [
   {file:'woman-29',gender:'여',age:28,label:'귀 뒤로 넘긴 턱선 단발 · 짙은 피부 · 시크한 미소',scale:1.03},
   {file:'woman-30',gender:'여',age:30,label:'구름 같은 펌 · 에어리 앞머리 · 동그란 안경',scale:0.94},
 ];
-export const isReady=i=>CAST[i]?.gender==='남'||READY.has(CAST[i]?.file);
+export const isReady=i=>!RETIRED.has(CAST[i]?.file)&&(CAST[i]?.gender==='남'||READY.has(CAST[i]?.file));
 export const matchesGender=(index,gender)=>Number.isInteger(index)&&CAST[index]?.gender===gender;
 export const matchesAppearance=(index,p)=>matchesGender(index,p.gender)&&isReady(index)&&Math.abs(CAST[index].age-p.age)<=2;
 export function candidates(gender,age){return CAST.map((_,i)=>i).filter(i=>matchesGender(i,gender)&&isReady(i)&&Math.abs(CAST[i].age-age)<=2);}
@@ -59,8 +60,9 @@ export function newAppearance(s,gender,age){
   const visualId=unused.length?unused.reduce((best,i)=>Math.abs(CAST[i].age-age)<Math.abs(CAST[best].age-age)?i:best,unused[0]):nextAppearance(s,gender,age);
   return {visualId,age:Math.abs(CAST[visualId].age-age)<=2?age:CAST[visualId].age};
 }
+export const retiredAppearance=(index,p)=>matchesGender(index,p.gender)&&RETIRED.has(CAST[index]?.file)&&Math.abs(CAST[index].age-p.age)<=2;
 export function migrateAppearances(s){
   const people=[...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications];
-  for(const p of people)if(p.visualId===undefined)p.visualId=nextAppearance(s,p.gender,p.age);
+  for(const p of people)if(p.visualId===undefined||retiredAppearance(p.visualId,p))p.visualId=nextAppearance(s,p.gender,p.age);
   return s;
 }

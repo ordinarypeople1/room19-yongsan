@@ -10,6 +10,7 @@
 import {readFile,writeFile,access,mkdir} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {RETIRED_FILES} from '../cast-retired.js';
 import {ROSTER,promptFor} from './cast-roster.mjs';
 import {IMAGE_MODEL} from '../resident-images.mjs';
 
@@ -46,7 +47,7 @@ async function generate(key,entry){
 
 export async function writeReady(){
   const ready=[];
-  for(const n of ['woman-01','woman-02','woman-03','woman-04',...ROSTER.map(r=>r.file)])if(await exists(resolve(castDir,n+'.png')))ready.push(n);
+  for(const n of ['woman-01','woman-02','woman-03','woman-04',...ROSTER.map(r=>r.file)])if(!RETIRED_FILES.includes(n)&&await exists(resolve(castDir,n+'.png')))ready.push(n);
   const body=`// 이미지 파일(assets/cast/woman-NN.png)이 실제로 있는 인물 목록입니다.\n// 'npm run cast:ready' 또는 'npm run cast:generate' 가 이 파일을 자동으로 갱신합니다.\nexport const READY_FILES=${JSON.stringify(ready)};\n`;
   await writeFile(resolve(root,'cast-ready.js'),body);
   return ready;
@@ -60,6 +61,7 @@ async function main(){
   const only=value('only')?.split(',').map(v=>v.trim());
   const targets=[];
   for(const entry of ROSTER){
+    if(RETIRED_FILES.includes(entry.file))continue;
     if(only&&!only.includes(entry.file))continue;
     if(entry.redo&&!flag('redo')&&!only)continue;
     if(!flag('force')&&!entry.redo&&await exists(resolve(castDir,entry.file+'.png')))continue;
