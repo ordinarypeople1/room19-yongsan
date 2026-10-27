@@ -1,5 +1,5 @@
 import { activeInteraction, validInteraction } from './interactions.js';
-import { nextAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
+import { newAppearance, migrateAppearances, matchesGender, matchesAppearance } from './cast.js';
 import { elapsedGameMinutes } from './pace.js';
 import { tickStories, validStory } from './life-story.js';
 import { recordActivities, validActivityLog, compactActivityLogs } from './activity-log.js';
@@ -50,12 +50,12 @@ export function person(s) {
   const gender = '여';
   const j = jobs[rand(jobs.length, s.rng)];
   const name = surnames[rand(10, s.rng)] + names.여[rand(8, s.rng)];
-  const age = 20 + rand(20, s.rng);
+  const {age,visualId} = newAppearance(s, gender, 20 + rand(30, s.rng));
   return {
     id: s.nextId++,
     name,
     gender,
-    visualId: nextAppearance(s, gender, age),
+    visualId,
     age,
     job: j[0], income: j[1], start: j[2], end: j[3],
     workdays: workdaysFor(j[4], rand(7, s.rng)),
@@ -497,7 +497,7 @@ const migrations = {
   2: s => {
     const people=[...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications],renames=[];
     for(const p of people){
-      if(!p||!['남','여'].includes(p.gender)||!Number.isInteger(p.age)||p.age<20||p.age>39||typeof p.name!=='string')throw Error('입주자 정보가 올바르지 않습니다.');
+      if(!p||!['남','여'].includes(p.gender)||!Number.isInteger(p.age)||p.age<20||p.age>49||typeof p.name!=='string')throw Error('입주자 정보가 올바르지 않습니다.');
       if(p.visualId!==undefined&&!matchesGender(p.visualId,p.gender))throw Error('인물 이미지 정보가 올바르지 않습니다.');
       if(p.gender==='남'){
         const old=p.name,given=names.여[(p.id-1)%names.여.length];
@@ -552,7 +552,7 @@ function validateSaveDetails(s) {
     if (!validActivityLog(p.activityLog)) fail();
     if (!validInteraction(p.interaction)) fail();
     if (p.visualId !== undefined && !matchesAppearance(p.visualId, p)) fail();
-    if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || p.gender !== '여' || p.age>39 || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();
+    if (!Number.isSafeInteger(p.id) || p.id < 1 || typeof p.name !== 'string' || p.name.length > 30 || p.gender !== '여' || p.age>49 || typeof p.job !== 'string' || p.job.length > 50 || typeof p.quiet !== 'boolean' || !p.relations || Array.isArray(p.relations)) fail();
     for (const k of ['energy', 'hunger', 'hygiene', 'connection', 'desire', 'happiness', 'social', 'tidy']) if (!finite(p[k], 0, 100)) fail();
     for (const k of ['income', 'budget', 'deposit', 'start', 'end', 'lowDays']) if (!finite(p[k], 0, 10000)) fail();
     if (p.start >= p.end || p.end > 24 || !Object.values(p.relations).every(v => finite(v, 0))) fail();

@@ -64,7 +64,7 @@ test('every module and stylesheet the browser entry point loads is publicly serv
 test('room photo requests accept only trusted room and light styles and all 30 portraits',async t=>{
   let prompt='';const base=await using(t,{apiKey:'test-secret',model:'test/model',fetchImpl:async(url,options)=>{prompt=JSON.parse(options.body).prompt;return Response.json({data:[{b64_json:'aGVsbG8=',media_type:'image/png'}]});}});
   const post=body=>fetch(base+'/api/photo',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const ok={prompt:'창가에서 차를 마시는 모습',portrait:'woman-30',age:30,room:'warm-v2',light:'night'};
-  assert.equal((await post(ok)).status,200);assert(prompt.includes('Setting: her own room'));assert(prompt.includes('houseplants'));assert(prompt.includes('dim warm lamp light'));assert(prompt.includes('No nudity'));
+  const ok={prompt:'창가에서 차를 마시는 모습',portrait:'woman-27',age:49,room:'warm-v2',light:'night'};
+  assert.equal((await post(ok)).status,200);assert.equal((await post({...ok,age:50})).status,400);assert(prompt.includes('Setting: her own room'));assert(prompt.includes('houseplants'));assert(prompt.includes('dim warm lamp light'));assert(prompt.includes('No nudity'));
   for(const bad of [{...ok,room:'../../etc'},{...ok,light:'<script>'},{...ok,portrait:'woman-31'},{...ok,portrait:'woman-00'}])assert.equal((await post(bad)).status,400);
 });

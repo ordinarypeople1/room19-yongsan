@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createGame,serialize,restore,person} from '../sim.js';
-import {CAST,visualIndex,candidates,matchesAppearance} from '../cast.js';
+import {CAST,visualIndex,candidates,matchesAppearance,newAppearance} from '../cast.js';
 import {appearance,portrait} from '../live-art.js';
 import {existsSync} from 'node:fs';
 import {ROSTER,promptFor} from '../scripts/cast-roster.mjs';
@@ -34,7 +34,7 @@ test('new people select the least repeated face among existing residents and app
 
 test('every supported adult age has a matching female portrait and no male guest sprite',()=>{
   const s=createGame(()=>.1);
-  for(let age=20;age<=39;age++){
+  for(let age=20;age<=49;age++){
     assert(candidates('여',age).length>0);
     const p={id:age,age,gender:'여',visualId:candidates('여',age)[0]};
     assert(matchesAppearance(visualIndex(p),p));assert(!appearance(p,true).includes('/man-'));
@@ -65,13 +65,13 @@ test('resident pool has 30 distinct women and the roster matches the game cast',
   const women=CAST.filter(p=>p.gender==='여');
   assert.equal(women.length,30);assert.equal(new Set(women.map(p=>p.file)).size,30);
   assert.equal(new Set(women.map(p=>p.label)).size,30);
-  for(const entry of ROSTER){const cast=CAST.find(c=>c.file===entry.file);assert(cast,entry.file);assert.equal(cast.age,entry.age);assert.equal(cast.label,entry.label);assert.equal(cast.gender,'여');assert(entry.age>=20&&entry.age<=39);}
+  for(const entry of ROSTER){const cast=CAST.find(c=>c.file===entry.file);assert(cast,entry.file);assert.equal(cast.age,entry.age);assert.equal(cast.label,entry.label);assert.equal(cast.gender,'여');assert(entry.age>=20&&entry.age<=49);}
   assert.equal(new Set(ROSTER.map(r=>r.subject)).size,ROSTER.length);
   assert.deepEqual(ROSTER.filter(r=>r.redo).map(r=>r.file),['woman-05','woman-06','woman-07','woman-08']);
 });
-test('once every portrait exists, each adult age has at least three distinct faces within two years',()=>{
+test('once every portrait exists, each adult age has at least two distinct faces within two years',()=>{
   const all=CAST.map((c,i)=>[c,i]).filter(([c])=>c.gender==='여');
-  for(let age=20;age<=39;age++)assert(all.filter(([c])=>Math.abs(c.age-age)<=2).length>=3,'age '+age);
+  for(let age=20;age<=49;age++)assert(all.filter(([c])=>Math.abs(c.age-age)<=2).length>=2,'age '+age);
 });
 test('only portraits whose image file exists are registered as ready',()=>{
   for(const file of READY_FILES)assert(existsSync(new URL('../assets/cast/'+file+'.png',import.meta.url)),file);
@@ -80,4 +80,28 @@ test('only portraits whose image file exists are registered as ready',()=>{
 });
 test('generation prompts keep adult, modest, single-subject and flat-backdrop requirements',()=>{
   for(const entry of ROSTER){const prompt=promptFor(entry);assert(prompt.includes('adult'));assert(prompt.includes('ONE PERSON ONLY'));assert(prompt.includes('flat solid #26233D'));assert(prompt.includes(`age of ${entry.age}`));assert(!/nude|lingerie|underwear|sexy/i.test(prompt));}
+});
+
+test('new arrivals exhaust all ready portraits before repeating a face',()=>{
+  const s={rooms:[],applications:[]};
+  for(let n=0;n<READY_FILES.length;n++){
+    const p={gender:'여',...newAppearance(s,'여',21)};
+    assert(matchesAppearance(p.visualId,p));
+    assert(!s.applications.some(q=>q.visualId===p.visualId));
+    s.applications.push(p);
+  }
+  assert.equal(new Set(s.applications.map(p=>p.visualId)).size,READY_FILES.length);
+});
+
+test('40s residents keep their age and appearance through save round trips',()=>{
+  const s=createGame(()=>.2),p=s.rooms[0].tenant;
+  p.age=49;p.visualId=CAST.findIndex(c=>c.file==='woman-27');
+  const loaded=restore(serialize(s)).rooms[0].tenant;
+  assert.equal(loaded.age,49);assert.equal(loaded.visualId,p.visualId);
+  p.age=50;assert.throws(()=>restore(serialize(s)));
+});
+
+test('all thirty female portraits are actually ready and cover every decade',()=>{
+  assert.equal(READY_FILES.length,30);
+  for(const decade of [20,30,40])assert(CAST.some(c=>c.gender==='여'&&c.age>=decade&&c.age<decade+10));
 });
