@@ -48,3 +48,23 @@ test('provider failures never return an invented generated photo',async t=>{
   const base=await using(t,{apiKey:'test-secret',model:'test/model',fetchImpl:async()=>Response.json({error:'provider failed'},{status:502})});
   const response=await fetch(base+'/api/photo',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify({prompt:'차 마시는 모습',portrait:'woman-02',age:32})});assert.equal(response.status,502);assert.equal((await response.json()).image,undefined);
 });
+
+test('every module and stylesheet the browser entry point loads is publicly served',async t=>{
+  const {readFile}=await import('node:fs/promises');const base=await using(t);
+  const seen=new Set(),queue=['horizon-app.js'];
+  while(queue.length){const file=queue.pop();if(seen.has(file))continue;seen.add(file);
+    const res=await fetch(base+'/'+file);assert.equal(res.status,200,file);
+    const source=await readFile(new URL('../'+file,import.meta.url),'utf8');
+    for(const m of source.matchAll(/from\s+'\.\/([\w.-]+\.js)'/g))queue.push(m[1]);
+  }
+  const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+  for(const m of html.matchAll(/href="([\w.-]+\.css)(?:\?[^"]*)?"/g))assert.equal((await fetch(base+'/'+m[1])).status,200,m[1]);
+  assert(seen.has('cast-ready.js')&&seen.has('fx.js')&&seen.has('activity-log.js'));
+});
+test('room photo requests accept only trusted room and light styles and all 30 portraits',async t=>{
+  let prompt='';const base=await using(t,{apiKey:'test-secret',model:'test/model',fetchImpl:async(url,options)=>{prompt=JSON.parse(options.body).prompt;return Response.json({data:[{b64_json:'aGVsbG8=',media_type:'image/png'}]});}});
+  const post=body=>fetch(base+'/api/photo',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const ok={prompt:'창가에서 차를 마시는 모습',portrait:'woman-30',age:30,room:'warm-v2',light:'night'};
+  assert.equal((await post(ok)).status,200);assert(prompt.includes('Setting: her own room'));assert(prompt.includes('houseplants'));assert(prompt.includes('dim warm lamp light'));assert(prompt.includes('No nudity'));
+  for(const bad of [{...ok,room:'../../etc'},{...ok,light:'<script>'},{...ok,portrait:'woman-31'},{...ok,portrait:'woman-00'}])assert.equal((await post(bad)).status,400);
+});
