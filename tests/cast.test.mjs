@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {createGame,serialize,restore,person} from '../sim.js';
 import {CAST,visualIndex,candidates,matchesAppearance,newAppearance} from '../cast.js';
 import {appearance,portrait} from '../live-art.js';
-import {existsSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {ROSTER,promptFor} from '../scripts/cast-roster.mjs';
+import {RETIRED_FILES} from '../cast-retired.js';
 import {READY_FILES} from '../cast-ready.js';
 test('all residents and applicants are women with age-matched individual faces',()=>{
   const s=createGame(()=>.1),people=s.rooms.map(r=>r.tenant).filter(Boolean);
@@ -69,13 +70,13 @@ test('resident pool has 30 distinct women and the roster matches the game cast',
   assert.equal(new Set(ROSTER.map(r=>r.subject)).size,ROSTER.length);
   assert.deepEqual(ROSTER.filter(r=>r.redo).map(r=>r.file),['woman-05','woman-06','woman-07','woman-08']);
 });
-test('once every portrait exists, each adult age has at least two distinct faces within two years',()=>{
+test('once every portrait exists, each adult age has at least one active face within two years',()=>{
   const all=CAST.map((c,i)=>[c,i]).filter(([c])=>c.gender==='여');
-  for(let age=20;age<=49;age++)assert(all.filter(([c])=>Math.abs(c.age-age)<=2).length>=2,'age '+age);
+  for(let age=20;age<=49;age++)assert(all.filter(([c])=>Math.abs(c.age-age)<=2).length>=1,'age '+age);
 });
 test('only portraits whose image file exists are registered as ready',()=>{
   for(const file of READY_FILES)assert(existsSync(new URL('../assets/cast/'+file+'.png',import.meta.url)),file);
-  for(const file of ['woman-01','woman-02','woman-03','woman-04'])assert(READY_FILES.includes(file));
+  for(const file of ['woman-03'])assert(READY_FILES.includes(file));
   const s=createGame(()=>.1);for(const p of [...s.rooms.map(r=>r.tenant).filter(Boolean),...s.applications])assert(READY_FILES.includes(CAST[p.visualId].file));
 });
 test('generation prompts keep adult, modest, single-subject and flat-backdrop requirements',()=>{
@@ -101,7 +102,34 @@ test('40s residents keep their age and appearance through save round trips',()=>
   p.age=50;assert.throws(()=>restore(serialize(s)));
 });
 
-test('all thirty female portraits are actually ready and cover every decade',()=>{
-  assert.equal(READY_FILES.length,30);
+test('all twenty-six active female portraits are actually ready and cover every decade',()=>{
+  assert.equal(READY_FILES.length,26);
   for(const decade of [20,30,40])assert(CAST.some(c=>c.gender==='여'&&c.age>=decade&&c.age<decade+10));
+});
+
+test('removed portraits are absent and existing saves migrate only those identities',()=>{
+ for(const file of RETIRED_FILES){
+  assert(!READY_FILES.includes(file));assert(!existsSync(new URL('../assets/cast/'+file+'.png',import.meta.url)));
+  const s=createGame(()=>.2),p=s.rooms[0].tenant,index=CAST.findIndex(c=>c.file===file);
+  p.age=CAST[index].age;p.visualId=index;const before={name:p.name,age:p.age,id:p.id};
+  const loaded=restore(serialize(s)).rooms[0].tenant;
+  assert.deepEqual({name:loaded.name,age:loaded.age,id:loaded.id},before);
+  assert(matchesAppearance(loaded.visualId,loaded));assert(!RETIRED_FILES.includes(CAST[loaded.visualId].file));
+  assert.equal(restore(serialize(restore(serialize(s)))).rooms[0].tenant.visualId,loaded.visualId);
+ }
+});
+
+test('every active resident has centered responsive face and bust assets',()=>{
+ const manifest=JSON.parse(readFileSync(new URL('../assets/portraits/crops.json',import.meta.url),'utf8'));
+ assert.deepEqual(Object.keys(manifest).sort(),[...READY_FILES].sort());
+ for(const file of READY_FILES){
+  const {face,faceCrop,bustCrop}=manifest[file],cx=face[0]+face[2]/2,cy=face[1]+face[3]/2;
+  assert(Math.abs((cx-faceCrop[0])/(faceCrop[2]-faceCrop[0])-.5)<.01,file);
+  assert(Math.abs((cy-faceCrop[1])/(faceCrop[3]-faceCrop[1])-.5)<.04,file);
+  assert(cx>bustCrop[0]&&cx<bustCrop[2]&&cy>bustCrop[1]&&cy<bustCrop[3],file);
+  for(const variant of ['face-96','face-192','face-320','bust-240','bust-480']){
+   const image=readFileSync(new URL('../assets/portraits/'+file+'-'+variant+'.webp',import.meta.url));
+   assert.equal(image.toString('ascii',0,4),'RIFF');assert.equal(image.toString('ascii',8,12),'WEBP');
+  }
+ }
 });

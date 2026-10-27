@@ -247,3 +247,15 @@ dialog::backdrop{background:radial-gradient(circle at 50% 28%,rgba(58,34,120,.78
   .event-dot,.live-dot,.vf-dot,.viewfinder.busy img,.skeleton-frame,#command-form[aria-busy=true] .command-field{animation:none}
   button:hover,.room-tile:hover,.minute-entry:hover,.generated-photo:hover{transform:none}
 }
+
+/* Face crops already contain the intended framing; never zoom the full-body source. */
+.face,.room-tile .face,.profile-photo .face,.avatar .face,.mini-face .face{background-image:none;background-size:cover;background-position:center;overflow:hidden}
+.face img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;image-rendering:auto}
+.profile-photo .face img{object-fit:cover;object-position:center}
+.profile-photo:hover .face{transform:none}
+
+/* Bring the residence closer, keeping photo windows and their hit targets together. */
+.city-art{transform:translateX(-50%) scale(1.18);transform-origin:59% 43%}
+.room-tile .face img{height:112%;transform:translateY(-10%);object-position:50% 58%}
+@media(max-width:800px){.city-art{transform:translateX(-55%) scale(1.1)}}
+@media(max-width:540px){.city-art{left:50%;top:110px;width:min(calc(var(--scene-height) * 1.5),calc(100vw / .36));height:auto;aspect-ratio:3/2;mask-image:linear-gradient(180deg,transparent,#000 9%,#000);transform:translateX(-59%) scale(1.06)}}
